@@ -4,7 +4,7 @@ use std::fs;
 mod polynomial;
 
 #[derive(Parser)]
-#[grammar = "poly.pest"]
+#[grammar = "poly copy.pest"]
 pub struct PolyParser;
 
 fn main() {
@@ -17,36 +17,30 @@ fn main() {
 
     for line in file.into_inner() {
         println!("LINE: {}", line.as_str());
+        let mut p = polynomial::Polynomial { terms: Vec::new() };
         match line.as_rule() {
             Rule::polynomial => {
                 for part in line.into_inner() {
                     match part.as_rule() {
-                        Rule::op => {
-                            println!("op: {}", part.as_str());
-                        }
                         Rule::term => {
                             let mut term = polynomial::Term {
-                                coefficient: 0.0,
+                                coefficient: 1.0,
                                 variables: Vec::new(),
                             };
                             for factor in part.into_inner() {
                                 match factor.as_rule() {
+                                    Rule::sign => {
+                                        if factor.as_str() == "-" {
+                                            term.coefficient *= -1.0;
+                                        }
+                                    }
                                     Rule::number => {
-                                        term.coefficient = match factor
-                                            .as_str()
-                                            .trim()
-                                            .parse::<f64>()
-                                        {
-                                            Ok(value) => value,
-                                            Err(_) => {
-                                                eprintln!("Could not parse \"{}\" as a floating point number.", factor.as_str());
-                                                return;
-                                            }
-                                        };
+                                        term.coefficient *=
+                                            factor.as_str().trim().parse::<f64>().unwrap();
                                     }
                                     Rule::var => {
                                         let variable = polynomial::Variable {
-                                            name: String::new(),
+                                            name: factor.as_str().to_string(),
                                             degree: 1,
                                         };
                                         term.variables.push(variable);
@@ -55,6 +49,7 @@ fn main() {
                                     _ => unreachable!(),
                                 }
                             }
+                            p.terms.push(term);
                         }
                         Rule::EOI => (),
                         _ => unreachable!(),
@@ -64,5 +59,10 @@ fn main() {
             Rule::EOI => (),
             _ => unreachable!(),
         }
+        for element in &p.terms {
+            println!("{:?}", element);
+        }
+
+        println!("{}", p.pprint());
     }
 }
