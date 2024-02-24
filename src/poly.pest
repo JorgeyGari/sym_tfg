@@ -1,0 +1,7 @@
+number     =  { ASCII_DIGIT+ }
+var        =  { ASCII_ALPHA }
+term       =  { number* ~ var* }
+op         =  { "+" | "-" }
+polynomial =  { term ~ (op ~ term)* }
+file       =  { SOI ~ (polynomial ~ NEWLINE)* ~ polynomial ~ NEWLINE? ~ EOI }
+WHITESPACE = _{ " " }
