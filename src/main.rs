@@ -64,5 +64,7 @@ fn main() {
         }
 
         println!("{}", p.pprint());
+        p.simplify();
+        println!("{}", p.pprint());
     }
 }

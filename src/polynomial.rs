@@ -1,13 +1,25 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     pub name: String,
     pub degree: i32,
+}
+
+impl PartialEq for Variable {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.degree == other.degree
+    }
 }
 
 #[derive(Debug)]
 pub struct Term {
     pub coefficient: f64,
     pub variables: Vec<Variable>,
+}
+
+impl Term {
+    pub fn sort(&mut self) {
+        self.variables.sort_by(|a, b| a.name.cmp(&b.name));
+    }
 }
 
 pub struct Polynomial {
@@ -30,5 +42,35 @@ impl Polynomial {
             }
         }
         result
+    }
+
+    pub fn simplify(&mut self) {
+        for term in &mut self.terms {
+            term.sort();
+        }
+
+        let mut new_terms: Vec<Term> = Vec::new();
+
+        for term in &self.terms {
+            let coeff: f64 = term.coefficient.clone();
+            let mut found = false;
+
+            for term1 in &mut new_terms {
+                if term1.variables == term.variables {
+                    term1.coefficient += term.coefficient;
+                    found = true;
+                    break;
+                }
+            }
+
+            if !found {
+                new_terms.push(Term {
+                    coefficient: coeff,
+                    variables: term.variables.clone(),
+                });
+            }
+        }
+
+        self.terms = new_terms;
     }
 }
