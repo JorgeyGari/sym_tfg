@@ -17,8 +17,26 @@ pub struct Term {
 }
 
 impl Term {
-    pub fn sort(&mut self) {
+    pub fn sort_vars(&mut self) {
         self.variables.sort_by(|a, b| a.name.cmp(&b.name));
+    }
+
+    pub fn factor(&mut self) {
+        let mut new_vars: Vec<Variable> = Vec::new();
+        for var1 in &self.variables {
+            let mut found = false;
+            for var2 in &mut new_vars {
+                if var1.name == var2.name {
+                    var2.degree += var1.degree;
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                new_vars.push(var1.clone());
+            }
+        }
+        self.variables = new_vars;
     }
 }
 
@@ -36,7 +54,7 @@ impl Polynomial {
             result.push_str(&term.coefficient.to_string());
             for variable in &term.variables {
                 result.push_str(&variable.name);
-                if variable.degree > 1 {
+                if variable.degree != 1 {
                     result.push_str(&format!("^{}", variable.degree));
                 }
             }
@@ -46,7 +64,11 @@ impl Polynomial {
 
     pub fn simplify(&mut self) {
         for term in &mut self.terms {
-            term.sort();
+            term.sort_vars();
+        }
+
+        for term in &mut self.terms {
+            term.factor();
         }
 
         let mut new_terms: Vec<Term> = Vec::new();
