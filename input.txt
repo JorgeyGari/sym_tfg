@@ -1,1 +1,1 @@
-- x + 3 - 5yz + 2x -zy + xx
+- x + 3 - 5yz + 2x -zy + 0.5xx - 0y + x3y2

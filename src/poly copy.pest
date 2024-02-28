@@ -1,5 +1,5 @@
 sign       =  { "+" | "-" }
-number     =  { ASCII_DIGIT+ }
+number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 var        =  { ASCII_ALPHA }
 term       =  { sign? ~ (number | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
