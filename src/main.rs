@@ -4,7 +4,7 @@ use std::fs;
 mod polynomial;
 
 #[derive(Parser)]
-#[grammar = "poly copy.pest"]
+#[grammar = "poly.pest"]
 pub struct PolyParser;
 
 fn main() {
