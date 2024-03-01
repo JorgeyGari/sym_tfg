@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::ops::Add;
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub struct Variable {
@@ -44,6 +45,7 @@ impl Term {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Polynomial {
     pub terms: Vec<Term>,
 }
@@ -129,5 +131,17 @@ impl Polynomial {
         self.add_like_terms();
 
         self.sort_terms();
+    }
+}
+
+impl Add for Polynomial {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        let mut result = self.terms.clone();
+        result.extend(other.terms);
+        let mut sum = Polynomial { terms: result };
+        sum.simplify();
+        sum
     }
 }
