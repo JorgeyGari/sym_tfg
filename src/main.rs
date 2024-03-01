@@ -4,7 +4,6 @@ use pest::pratt_parser::{Assoc, Op, PrattParser};
 use pest::Parser;
 use pest_derive::Parser;
 use std::fs;
-use std::ops::Add;
 
 mod polynomial;
 
@@ -79,12 +78,20 @@ fn main() {
             }
             Rule::expr => {
                 let mut iter = line.into_inner();
-                let left_poly = parse_polynomial(iter.next().unwrap().into_inner());
-                let _op = iter.next().unwrap();
-                let right_poly = parse_polynomial(iter.next().unwrap().into_inner());
+                let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
+                let mut result = first_poly;
 
-                // FIXME: Performs the operation only on two polynomials
-                let result = left_poly.add(right_poly);
+                while let Some(op) = iter.next() {
+                    let next_poly = parse_polynomial(iter.next().unwrap().into_inner());
+                    match op.as_rule() {
+                        Rule::add => result = result + next_poly,
+                        Rule::sub => result = result - next_poly,
+                        Rule::mul => result = result * next_poly,
+                        Rule::div => result = result / next_poly,
+                        _ => unreachable!(),
+                    }
+                }
+
                 println!("Result: {:?}", result.pprint());
             }
             Rule::EOI => (),

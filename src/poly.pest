@@ -1,6 +1,9 @@
-expr =  { "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")" }
-op   = _{ add }
+expr =  { "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")" ~ (op ~ "(" ~ polynomial ~ ")")* }
+op   = _{ add | sub | mul | div }
 add  =  { "+" }
+sub  =  { "-" }
+mul  =  { "*" }
+div  =  { "/" }
 
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }

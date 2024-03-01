@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub struct Variable {
@@ -143,5 +143,102 @@ impl Add for Polynomial {
         let mut sum = Polynomial { terms: result };
         sum.simplify();
         sum
+    }
+}
+
+impl Sub for Polynomial {
+    type Output = Self;
+
+    fn sub(self, mut other: Self) -> Self {
+        for term in &mut other.terms {
+            term.coefficient *= -1.0;
+        }
+
+        let mut result = self.terms.clone();
+        result.extend(other.terms);
+
+        let mut difference = Polynomial { terms: result };
+        difference.simplify();
+        difference
+    }
+}
+
+impl Mul for Polynomial {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        let mut result = Vec::new();
+        for term1 in &self.terms {
+            for term2 in &other.terms {
+                let mut new_vars = term1.variables.clone();
+                new_vars.extend(term2.variables.clone());
+                let mut new_term = Term {
+                    coefficient: term1.coefficient * term2.coefficient,
+                    variables: new_vars,
+                };
+                new_term.sort_vars();
+                new_term.factor();
+                result.push(new_term);
+            }
+        }
+        let mut product = Polynomial { terms: result };
+        product.simplify();
+        product
+    }
+}
+
+impl Div for Polynomial {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        if other.terms.is_empty() {
+            panic!("Division by zero");
+        }
+
+        let mut result = Polynomial { terms: Vec::new() };
+
+        let mut dividend = Polynomial {
+            terms: self.terms.clone(),
+        };
+        let divisor = Polynomial {
+            terms: other.terms.clone(),
+        };
+
+        while !dividend.terms.is_empty()
+            && dividend.terms[0].variables.len() >= divisor.terms[0].variables.len()
+        {
+            let mut term = Term {
+                coefficient: dividend.terms[0].coefficient / divisor.terms[0].coefficient,
+                variables: Vec::new(),
+            };
+
+            for (var1, var2) in dividend.terms[0]
+                .variables
+                .iter()
+                .zip(&divisor.terms[0].variables)
+            {
+                if var1.name != var2.name || var1.degree < var2.degree {
+                    panic!("Polynomial division results in non-integral coefficients");
+                }
+
+                let new_degree = var1.degree - var2.degree;
+                term.variables.push(Variable {
+                    name: var1.name.clone(),
+                    degree: new_degree,
+                });
+            }
+
+            result.terms.push(term.clone());
+
+            let subtraction_term = Polynomial {
+                terms: vec![term.clone()],
+            } * divisor.clone();
+
+            dividend = dividend - subtraction_term;
+            dividend.simplify();
+        }
+
+        result.simplify();
+        result
     }
 }
