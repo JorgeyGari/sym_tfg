@@ -46,6 +46,7 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
+        new_vars.retain(|v| v.degree != 0);
         self.variables = new_vars;
     }
 }
@@ -194,52 +195,24 @@ impl Mul for Polynomial {
 
 impl Div for Polynomial {
     type Output = Self;
-
     fn div(self, other: Self) -> Self {
         let mut result = Vec::new();
         for term1 in &self.terms {
             for term2 in &other.terms {
-                let mut new_vars = Vec::new();
-                let mut remaining_vars_term1 = term1.variables.clone();
-
-                for var2 in &term2.variables {
-                    let mut found = false;
-                    for var1 in &mut remaining_vars_term1 {
-                        if var1.name == var2.name {
-                            let new_degree = var1.degree - var2.degree;
-                            if new_degree != 0 {
-                                new_vars.push(Variable {
-                                    name: var1.name.clone(),
-                                    degree: new_degree,
-                                });
-                            }
-                            found = true;
-                            break;
-                        }
-                    }
-                    if !found {
-                        // Variable with the same name not found in term1, add it with negative degree
-                        new_vars.push(Variable {
-                            name: var2.name.clone(),
-                            degree: -var2.degree,
-                        });
-                    }
+                let mut new_vars = term2.variables.clone();
+                for var in &mut new_vars {
+                    var.degree *= -1;
                 }
-
-                // Add the remaining variables from term1
-                new_vars.extend(remaining_vars_term1);
-
+                new_vars.extend(term1.variables.clone());
                 let mut new_term = Term {
                     coefficient: term1.coefficient / term2.coefficient,
                     variables: new_vars,
                 };
-
                 new_term.sort_vars();
                 new_term.factor();
                 result.push(new_term);
             }
         }
-
         let mut quotient = Polynomial { terms: result };
         quotient.simplify();
         quotient
