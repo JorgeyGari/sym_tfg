@@ -20,6 +20,11 @@ pub struct Term {
 }
 
 impl Term {
+    /// Find max degree of the variables in the term.
+    pub fn _max_degree(&self) -> i32 {
+        self.variables.iter().map(|v| v.degree).max().unwrap_or(0)
+    }
+
     /// Sorts the variables in the term in ascending order based on their names.
     pub fn sort_vars(&mut self) {
         self.variables.sort_by(|a, b| a.name.cmp(&b.name));
@@ -191,54 +196,52 @@ impl Div for Polynomial {
     type Output = Self;
 
     fn div(self, other: Self) -> Self {
-        if other.terms.is_empty() {
-            panic!("Division by zero");
-        }
+        let mut result = Vec::new();
+        for term1 in &self.terms {
+            for term2 in &other.terms {
+                let mut new_vars = Vec::new();
+                let mut remaining_vars_term1 = term1.variables.clone();
 
-        let mut result = Polynomial { terms: Vec::new() };
-
-        let mut dividend = Polynomial {
-            terms: self.terms.clone(),
-        };
-        let divisor = Polynomial {
-            terms: other.terms.clone(),
-        };
-
-        while !dividend.terms.is_empty()
-            && dividend.terms[0].variables.len() >= divisor.terms[0].variables.len()
-        {
-            let mut term = Term {
-                coefficient: dividend.terms[0].coefficient / divisor.terms[0].coefficient,
-                variables: Vec::new(),
-            };
-
-            for (var1, var2) in dividend.terms[0]
-                .variables
-                .iter()
-                .zip(&divisor.terms[0].variables)
-            {
-                if var1.name != var2.name || var1.degree < var2.degree {
-                    panic!("Polynomial division results in non-integral coefficients");
+                for var2 in &term2.variables {
+                    let mut found = false;
+                    for var1 in &mut remaining_vars_term1 {
+                        if var1.name == var2.name {
+                            let new_degree = var1.degree - var2.degree;
+                            if new_degree != 0 {
+                                new_vars.push(Variable {
+                                    name: var1.name.clone(),
+                                    degree: new_degree,
+                                });
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
+                        // Variable with the same name not found in term1, add it with negative degree
+                        new_vars.push(Variable {
+                            name: var2.name.clone(),
+                            degree: -var2.degree,
+                        });
+                    }
                 }
 
-                let new_degree = var1.degree - var2.degree;
-                term.variables.push(Variable {
-                    name: var1.name.clone(),
-                    degree: new_degree,
-                });
+                // Add the remaining variables from term1
+                new_vars.extend(remaining_vars_term1);
+
+                let mut new_term = Term {
+                    coefficient: term1.coefficient / term2.coefficient,
+                    variables: new_vars,
+                };
+
+                new_term.sort_vars();
+                new_term.factor();
+                result.push(new_term);
             }
-
-            result.terms.push(term.clone());
-
-            let subtraction_term = Polynomial {
-                terms: vec![term.clone()],
-            } * divisor.clone();
-
-            dividend = dividend - subtraction_term;
-            dividend.simplify();
         }
 
-        result.simplify();
-        result
+        let mut quotient = Polynomial { terms: result };
+        quotient.simplify();
+        quotient
     }
 }
