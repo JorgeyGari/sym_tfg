@@ -75,15 +75,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
-name = "mono"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "pest",
- "pest_derive",
-]
-
-[[package]]
 name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,6 +152,15 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "sym_tfg"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "pest",
+ "pest_derive",
 ]
 
 [[package]]
