@@ -74,8 +74,8 @@ impl Polynomial {
         });
     }
 
-    /// Prints the polynomial in a pretty format.
-    pub fn pprint(&self) -> String {
+    /// Converts the polynomial to a string in a pretty format.
+    pub fn as_string(&self) -> String {
         let mut result = String::new();
         for (i, term) in self.terms.iter().enumerate() {
             if term.coefficient == 0.0 {
@@ -90,7 +90,7 @@ impl Polynomial {
             for variable in &term.variables {
                 result.push_str(&variable.name);
                 if variable.degree != 1 {
-                    result.push_str(&format!("^{}", variable.degree));
+                    result.push_str(&format!("^({})", variable.degree));
                 }
             }
         }
@@ -160,12 +160,7 @@ impl Sub for Polynomial {
             term.coefficient *= -1.0;
         }
 
-        let mut result = self.terms.clone();
-        result.extend(other.terms);
-
-        let mut difference = Polynomial { terms: result };
-        difference.simplify();
-        difference
+        self.add(other)
     }
 }
 

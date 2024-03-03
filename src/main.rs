@@ -1,6 +1,4 @@
-use lazy_static::lazy_static;
 use pest::iterators::Pairs;
-use pest::pratt_parser::{Assoc, Op, PrattParser};
 use pest::Parser;
 use pest_derive::Parser;
 use std::fs;
@@ -10,17 +8,6 @@ mod polynomial;
 #[derive(Parser)]
 #[grammar = "poly.pest"]
 pub struct PolyParser;
-
-lazy_static! {
-    static ref PRATT_PARSER: PrattParser<Rule> = {
-        use Assoc::*;
-        use Rule::*;
-
-        PrattParser::new()
-            .op(Op::infix(add, Left)) // | Op::infix(subtract, Left))
-            //.op(Op::infix(multiply, Left) | Op::infix(divide, Left))
-    };
-}
 
 fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
     let mut p = polynomial::Polynomial { terms: Vec::new() };
@@ -74,7 +61,7 @@ fn main() {
         match line.as_rule() {
             Rule::polynomial => {
                 let p = parse_polynomial(line.into_inner());
-                p.pprint();
+                p.as_string();
             }
             Rule::expr => {
                 let mut iter = line.into_inner();
@@ -92,7 +79,7 @@ fn main() {
                     }
                 }
 
-                println!("Result: {:?}", result.pprint());
+                println!("Result: {:?}", result.as_string());
             }
             Rule::EOI => (),
             _ => unreachable!(),
