@@ -1,7 +1,14 @@
+expr =  { "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")" ~ (op ~ "(" ~ polynomial ~ ")")* }
+op   = _{ add | sub | mul | div }
+add  =  { "+" }
+sub  =  { "-" }
+mul  =  { "*" }
+div  =  { "/" }
+
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 var        =  { ASCII_ALPHA }
 term       =  { sign? ~ (number | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
-file       =  { SOI ~ (polynomial ~ NEWLINE)* ~ polynomial ~ NEWLINE? ~ EOI }
+file       =  { SOI ~ ((expr | polynomial) ~ NEWLINE)* ~ (expr | polynomial) ~ NEWLINE? ~ EOI }
 WHITESPACE = _{ " " }

@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub struct Variable {
@@ -19,6 +20,11 @@ pub struct Term {
 }
 
 impl Term {
+    /// Find max degree of the variables in the term.
+    pub fn _max_degree(&self) -> i32 {
+        self.variables.iter().map(|v| v.degree).max().unwrap_or(0)
+    }
+
     /// Sorts the variables in the term in ascending order based on their names.
     pub fn sort_vars(&mut self) {
         self.variables.sort_by(|a, b| a.name.cmp(&b.name));
@@ -40,10 +46,12 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
+        new_vars.retain(|v| v.degree != 0);
         self.variables = new_vars;
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Polynomial {
     pub terms: Vec<Term>,
 }
@@ -66,8 +74,8 @@ impl Polynomial {
         });
     }
 
-    /// Prints the polynomial in a pretty format.
-    pub fn pprint(&self) -> String {
+    /// Converts the polynomial to a string in a pretty format.
+    pub fn as_string(&self) -> String {
         let mut result = String::new();
         for (i, term) in self.terms.iter().enumerate() {
             if term.coefficient == 0.0 {
@@ -82,7 +90,7 @@ impl Polynomial {
             for variable in &term.variables {
                 result.push_str(&variable.name);
                 if variable.degree != 1 {
-                    result.push_str(&format!("^{}", variable.degree));
+                    result.push_str(&format!("^({})", variable.degree));
                 }
             }
         }
@@ -129,5 +137,79 @@ impl Polynomial {
         self.add_like_terms();
 
         self.sort_terms();
+    }
+}
+
+impl Add for Polynomial {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        let mut result = self.terms.clone();
+        result.extend(other.terms);
+        let mut sum = Polynomial { terms: result };
+        sum.simplify();
+        sum
+    }
+}
+
+impl Sub for Polynomial {
+    type Output = Self;
+
+    fn sub(self, mut other: Self) -> Self {
+        for term in &mut other.terms {
+            term.coefficient *= -1.0;
+        }
+
+        self.add(other)
+    }
+}
+
+impl Mul for Polynomial {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        let mut result = Vec::new();
+        for term1 in &self.terms {
+            for term2 in &other.terms {
+                let mut new_vars = term1.variables.clone();
+                new_vars.extend(term2.variables.clone());
+                let mut new_term = Term {
+                    coefficient: term1.coefficient * term2.coefficient,
+                    variables: new_vars,
+                };
+                new_term.sort_vars();
+                new_term.factor();
+                result.push(new_term);
+            }
+        }
+        let mut product = Polynomial { terms: result };
+        product.simplify();
+        product
+    }
+}
+
+impl Div for Polynomial {
+    type Output = Self;
+    fn div(self, other: Self) -> Self {
+        let mut result = Vec::new();
+        for term1 in &self.terms {
+            for term2 in &other.terms {
+                let mut new_vars = term2.variables.clone();
+                for var in &mut new_vars {
+                    var.degree *= -1;
+                }
+                new_vars.extend(term1.variables.clone());
+                let mut new_term = Term {
+                    coefficient: term1.coefficient / term2.coefficient,
+                    variables: new_vars,
+                };
+                new_term.sort_vars();
+                new_term.factor();
+                result.push(new_term);
+            }
+        }
+        let mut quotient = Polynomial { terms: result };
+        quotient.simplify();
+        quotient
     }
 }
