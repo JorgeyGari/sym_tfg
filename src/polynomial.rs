@@ -57,8 +57,32 @@ pub struct Polynomial {
 }
 
 impl Polynomial {
+    /// List each term in the polynomial.
+    pub fn _print(&self) {
+        for term in &self.terms {
+            println!("{:?}", term);
+        }
+    }
+
+    /// Evaluate the polynomial at a given value for the variables.
+    pub fn evaluate(&mut self, values: &Vec<(String, f64)>) -> () {
+        let mut result = Polynomial { terms: Vec::new() };
+        for term in &self.terms {
+            let mut new_term = term.clone();
+            for var in &mut new_term.variables {
+                if let Some(val) = values.iter().find(|(name, _)| name == &var.name) {
+                    new_term.coefficient *= val.1.powi(var.degree as i32);
+                    var.degree = 0; // Set the degree of the variable to 0, essentially removing it from the term
+                }
+            }
+            result.terms.push(new_term);
+        }
+        *self = result;
+        self.simplify();
+    }
+
     /// Sorts the terms in the polynomial in descending order based on the max degree of the variables in each term, then by alphabetical order.
-    pub fn sort_terms(&mut self) {
+    pub fn sort_terms(&mut self) -> () {
         self.terms.sort_by(|a, b| {
             let max_degree_cmp = b
                 .variables
