@@ -56,14 +56,27 @@ fn main() {
         .next()
         .unwrap();
 
+    let mut var_values: Vec<(String, f64)> = Vec::new(); // Vector to store the values of the variables
+
     for line in file.into_inner() {
-        println!("LINE: {}", line.as_str());
+        println!("{}", line.as_str());
         match line.as_rule() {
-            Rule::polynomial => {
-                let p = parse_polynomial(line.into_inner());
-                p.as_string();
+            Rule::assign => {
+                let mut iter = line.into_inner();
+                let var_name = iter.next().unwrap().as_str().to_string();
+                let var_value = iter.next().unwrap().as_str().trim().parse::<f64>().unwrap();
+                var_values.push((var_name.clone(), var_value));
+
+                println!("\t{} = {}", var_name, var_value);
             }
-            Rule::expr => {
+            Rule::polynomial => {
+                let mut p = parse_polynomial(line.into_inner());
+
+                p.evaluate(&var_values);
+
+                println!("\t{}", p.as_string());
+            }
+            Rule::operation => {
                 let mut iter = line.into_inner();
                 let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
                 let mut result = first_poly;
@@ -79,7 +92,9 @@ fn main() {
                     }
                 }
 
-                println!("Result: {:?}", result.as_string());
+                result.evaluate(&var_values);
+
+                println!("\t{}", result.as_string());
             }
             Rule::EOI => (),
             _ => unreachable!(),
