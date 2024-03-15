@@ -48,6 +48,31 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
     p
 }
 
+fn parse_assignment(assignment: Pairs<Rule>) -> (String, f64) {
+    let mut iter = assignment;
+    let var_name = iter.next().unwrap().as_str().to_string();
+    let var_value = iter.next().unwrap().as_str().trim().parse::<f64>().unwrap();
+    (var_name, var_value)
+}
+
+fn parse_operation(operation: Pairs<Rule>) -> polynomial::Polynomial {
+    let mut iter = operation;
+    let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
+    let mut result = first_poly;
+
+    while let Some(op) = iter.next() {
+        let next_poly = parse_polynomial(iter.next().unwrap().into_inner());
+        match op.as_rule() {
+            Rule::add => result = result + next_poly,
+            Rule::sub => result = result - next_poly,
+            Rule::mul => result = result * next_poly,
+            Rule::div => result = result / next_poly,
+            _ => unreachable!(),
+        }
+    }
+    result
+}
+
 fn main() {
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
@@ -62,9 +87,7 @@ fn main() {
         println!("{}", line.as_str());
         match line.as_rule() {
             Rule::assign => {
-                let mut iter = line.into_inner();
-                let var_name = iter.next().unwrap().as_str().to_string();
-                let var_value = iter.next().unwrap().as_str().trim().parse::<f64>().unwrap();
+                let (var_name, var_value) = parse_assignment(line.into_inner());
                 var_values.push((var_name.clone(), var_value));
 
                 println!("\t{} = {}", var_name, var_value);
@@ -77,20 +100,7 @@ fn main() {
                 println!("\t{}", p.as_string());
             }
             Rule::operation => {
-                let mut iter = line.into_inner();
-                let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
-                let mut result = first_poly;
-
-                while let Some(op) = iter.next() {
-                    let next_poly = parse_polynomial(iter.next().unwrap().into_inner());
-                    match op.as_rule() {
-                        Rule::add => result = result + next_poly,
-                        Rule::sub => result = result - next_poly,
-                        Rule::mul => result = result * next_poly,
-                        Rule::div => result = result / next_poly,
-                        _ => unreachable!(),
-                    }
-                }
+                let mut result = parse_operation(line.into_inner());
 
                 result.evaluate(&var_values);
 
