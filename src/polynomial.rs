@@ -51,6 +51,37 @@ impl Term {
     }
 }
 
+impl Div for Term {
+    type Output = Self;
+    fn div(self, other: Self) -> Self {
+        let mut result = Term {
+            coefficient: self.coefficient / other.coefficient,
+            variables: Vec::new(),
+        };
+        for var1 in &self.variables {
+            let mut found = false;
+            for var2 in &other.variables {
+                if var1.name == var2.name {
+                    result.variables.push(Variable {
+                        name: var1.name.clone(),
+                        degree: var1.degree - var2.degree,
+                    });
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                let inv_var = Variable {
+                    name: var1.name.clone(),
+                    degree: -var1.degree,
+                };
+                result.variables.push(inv_var);
+            }
+        }
+        result
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Polynomial {
     pub terms: Vec<Term>,
