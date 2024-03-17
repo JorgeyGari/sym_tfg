@@ -84,6 +84,10 @@ fn main() {
     let mut var_values: Vec<(String, f64)> = Vec::new(); // Vector to store the values of the variables
 
     for line in file.into_inner() {
+        if line.as_str().trim().is_empty() {
+            continue; // Skip empty lines
+        }
+
         println!("{}", line.as_str());
         match line.as_rule() {
             Rule::assign => {

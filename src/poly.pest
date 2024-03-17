@@ -7,12 +7,12 @@ sub       =  { "-" }
 mul       =  { "*" }
 div       =  { "/" }
 
-assign = { var ~ "=" ~ expr }
+assign = { var ~ "=" ~ (operation | polynomial) }
 
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 var        = @{ ASCII_ALPHA }
 term       =  { sign? ~ (number | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
-file       =  { SOI ~ ((expr | assign) ~ NEWLINE)* ~ (expr | assign) ~ NEWLINE? ~ EOI }
+file       =  { SOI ~ ((expr | assign) ~ NEWLINE)* ~ EOI }
 WHITESPACE = _{ " " }
