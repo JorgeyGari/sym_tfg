@@ -93,21 +93,16 @@ fn main() {
             Rule::assign => {
                 let (var_name, var_value) = parse_assignment(line.into_inner());
                 var_values.push((var_name.clone(), var_value));
-
                 println!("\t{} = {}", var_name, var_value);
             }
             Rule::polynomial => {
                 let mut p = parse_polynomial(line.into_inner());
-
                 p.evaluate(&var_values);
-
                 println!("\t{}", p.as_string());
             }
             Rule::operation => {
                 let mut result = parse_operation(line.into_inner());
-
                 result.evaluate(&var_values);
-
                 println!("\t{}", result.as_string());
             }
             Rule::EOI => (),
