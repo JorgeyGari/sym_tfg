@@ -21,7 +21,7 @@ pub struct Term {
 
 impl Term {
     /// Find max degree of the variables in the term.
-    pub fn _max_degree(&self) -> i32 {
+    pub fn max_degree(&self) -> i32 {
         self.variables.iter().map(|v| v.degree).max().unwrap_or(0)
     }
 
@@ -88,11 +88,33 @@ pub struct Polynomial {
 }
 
 impl Polynomial {
+    /// Return the degree of the polynomial.
+    pub fn degree(&self) -> i32 {
+        self.terms.iter().map(|t| t.max_degree()).max().unwrap_or(0)
+    }
+
     /// List each term in the polynomial.
     pub fn _print(&self) {
         for term in &self.terms {
             println!("{:?}", term);
         }
+    }
+
+    /// Return the leading term of the polynomial.
+    pub fn leading_term(&self) -> Term {
+        let mut max_degree = 0;
+        let mut leading_term = Term {
+            coefficient: 0.0,
+            variables: Vec::new(),
+        };
+        for term in &self.terms {
+            let degree = term.max_degree();
+            if degree > max_degree {
+                max_degree = degree;
+                leading_term = term.clone();
+            }
+        }
+        leading_term
     }
 
     /// Evaluate the polynomial at a given value for the variables.
