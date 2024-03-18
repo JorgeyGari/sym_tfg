@@ -82,6 +82,17 @@ impl Div for Term {
     }
 }
 
+impl PartialEq for Term {
+    fn eq(&self, other: &Self) -> bool {
+        let mut self_copy = self.clone();
+        self_copy.sort_vars();
+        let mut other_copy = other.clone();
+        other_copy.sort_vars();
+        self_copy.coefficient == other_copy.coefficient
+            && self_copy.variables == other_copy.variables
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Polynomial {
     pub terms: Vec<Term>,
@@ -213,6 +224,9 @@ impl Polynomial {
 
         self.add_like_terms();
 
+        // Filter to remove terms with coefficient 0
+        self.terms.retain(|term| term.coefficient != 0.0);
+
         self.sort_terms();
     }
 }
@@ -268,25 +282,53 @@ impl Mul for Polynomial {
 impl Div for Polynomial {
     type Output = Self;
     fn div(self, other: Self) -> Self {
-        let mut result = Vec::new();
-        for term1 in &self.terms {
-            for term2 in &other.terms {
-                let mut new_vars = term2.variables.clone();
-                for var in &mut new_vars {
-                    var.degree *= -1;
-                }
-                new_vars.extend(term1.variables.clone());
-                let mut new_term = Term {
-                    coefficient: term1.coefficient / term2.coefficient,
-                    variables: new_vars,
-                };
-                new_term.sort_vars();
-                new_term.factor();
-                result.push(new_term);
-            }
+        let mut dividend = self.clone();
+        dividend.simplify();
+
+        if dividend.terms.len() == 0 {
+            return Polynomial {
+                terms: vec![Term {
+                    coefficient: 0.0,
+                    variables: vec![],
+                }],
+            };
         }
-        let mut quotient = Polynomial { terms: result };
+
+        let mut divisor = other.clone();
+        divisor.simplify();
+
+        let mut quotient = Polynomial { terms: vec![] };
+
+        let mut remainder = dividend.clone();
+
+        let zero_poly = Polynomial {
+            terms: vec![Term {
+                coefficient: 0.0,
+                variables: vec![],
+            }],
+        };
+
+        while remainder != zero_poly && remainder.degree() >= divisor.degree() {
+            let t = remainder.leading_term() / divisor.leading_term();
+            quotient = quotient
+                + Polynomial {
+                    terms: vec![t.clone()],
+                };
+            remainder = remainder - (divisor.clone() * Polynomial { terms: vec![t] });
+            remainder.simplify();
+        }
+
         quotient.simplify();
         quotient
+    }
+}
+
+impl PartialEq for Polynomial {
+    fn eq(&self, other: &Self) -> bool {
+        let mut self_copy = self.clone();
+        self_copy.simplify();
+        let mut other_copy = other.clone();
+        other_copy.simplify();
+        self.terms == other.terms
     }
 }
