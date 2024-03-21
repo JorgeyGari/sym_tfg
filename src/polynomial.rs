@@ -52,33 +52,30 @@ impl Term {
 }
 
 impl Div for Term {
-    type Output = Self;
-    fn div(self, other: Self) -> Self {
-        let mut result = Term {
-            coefficient: self.coefficient / other.coefficient,
-            variables: Vec::new(),
-        };
-        for var1 in &self.variables {
-            let mut found = false;
-            for var2 in &other.variables {
-                if var1.name == var2.name {
-                    result.variables.push(Variable {
-                        name: var1.name.clone(),
-                        degree: var1.degree - var2.degree,
-                    });
-                    found = true;
-                    break;
+    type Output = Polynomial;
+    fn div(self, other: Self) -> Polynomial {
+        let dividend = Polynomial { terms: vec![self] };
+        let divisor = Polynomial { terms: vec![other] };
+        let mut result = Vec::new();
+        for term1 in &dividend.terms {
+            for term2 in &divisor.terms {
+                let mut new_vars = term2.variables.clone();
+                for var in &mut new_vars {
+                    var.degree *= -1;
                 }
-            }
-            if !found {
-                let inv_var = Variable {
-                    name: var1.name.clone(),
-                    degree: -var1.degree,
+                new_vars.extend(term1.variables.clone());
+                let mut new_term = Term {
+                    coefficient: term1.coefficient / term2.coefficient,
+                    variables: new_vars,
                 };
-                result.variables.push(inv_var);
+                new_term.sort_vars();
+                new_term.factor();
+                result.push(new_term);
             }
         }
-        result
+        let mut quotient = Polynomial { terms: result };
+        quotient.simplify();
+        quotient
     }
 }
 
@@ -120,7 +117,7 @@ impl Polynomial {
         };
         for term in &self.terms {
             let degree = term.max_degree();
-            if degree > max_degree {
+            if degree >= max_degree {
                 max_degree = degree;
                 leading_term = term.clone();
             }
@@ -301,6 +298,12 @@ impl Div for Polynomial {
 
         let mut remainder = dividend.clone();
 
+        /* println!(
+            "Remainder: {}\nDivisor: {}",
+            remainder.as_string(),
+            divisor.as_string()
+        ); */
+
         let zero_poly = Polynomial {
             terms: vec![Term {
                 coefficient: 0.0,
@@ -308,14 +311,18 @@ impl Div for Polynomial {
             }],
         };
 
-        while remainder != zero_poly && remainder.degree() >= divisor.degree() {
+        while remainder != zero_poly
+            && remainder.terms.len() != 0
+            && remainder.degree() >= divisor.degree()
+        {
             let t = remainder.leading_term() / divisor.leading_term();
-            quotient = quotient
-                + Polynomial {
-                    terms: vec![t.clone()],
-                };
-            remainder = remainder - (divisor.clone() * Polynomial { terms: vec![t] });
+            // remainder._print();
+            // println!("t: {:?}", t);
+            quotient = quotient + t.clone();
+            // println!("Quotient: {}", quotient.as_string());
+            remainder = remainder - (divisor.clone() * t.clone());
             remainder.simplify();
+            remainder._print();
         }
 
         quotient.simplify();
