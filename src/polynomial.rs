@@ -1,3 +1,4 @@
+use num::rational::Rational64;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -15,7 +16,7 @@ impl PartialEq for Variable {
 
 #[derive(Debug, Clone)]
 pub struct Term {
-    pub coefficient: f64,
+    pub coefficient: Rational64,
     pub variables: Vec<Variable>,
 }
 
@@ -112,7 +113,7 @@ impl Polynomial {
     pub fn leading_term(&self) -> Term {
         let mut max_degree = 0;
         let mut leading_term = Term {
-            coefficient: 0.0,
+            coefficient: Rational64::new(0, 1),
             variables: Vec::new(),
         };
         for term in &self.terms {
@@ -126,13 +127,15 @@ impl Polynomial {
     }
 
     /// Evaluate the polynomial at a given value for the variables.
-    pub fn evaluate(&mut self, values: &Vec<(String, f64)>) -> () {
+    pub fn evaluate(&mut self, values: &Vec<(String, Rational64)>) {
         let mut result = Polynomial { terms: Vec::new() };
         for term in &self.terms {
             let mut new_term = term.clone();
             for var in &mut new_term.variables {
                 if let Some(val) = values.iter().find(|(name, _)| name == &var.name) {
-                    new_term.coefficient *= val.1.powi(var.degree as i32);
+                    for _ in 0..var.degree {
+                        new_term.coefficient *= val.1;
+                    }
                     var.degree = 0; // Set the degree of the variable to 0, essentially removing it from the term
                 }
             }
@@ -163,13 +166,13 @@ impl Polynomial {
     pub fn as_string(&self) -> String {
         let mut result = String::new();
         for (i, term) in self.terms.iter().enumerate() {
-            if term.coefficient == 0.0 {
+            if term.coefficient == Rational64::new(0, 1) {
                 continue;
             }
-            if i != 0 && term.coefficient > 0.0 {
+            if i != 0 && term.coefficient > Rational64::new(0, 1) {
                 result.push_str("+");
             }
-            if term.coefficient != 1.0 {
+            if term.coefficient != Rational64::new(1, 1) {
                 result.push_str(&term.coefficient.to_string());
             }
             for variable in &term.variables {
@@ -187,7 +190,7 @@ impl Polynomial {
         let mut new_terms: Vec<Term> = Vec::new();
 
         for term in &self.terms {
-            let coeff: f64 = term.coefficient.clone();
+            let coeff: Rational64 = term.coefficient.clone();
             let mut found = false;
 
             for term1 in &mut new_terms {
@@ -222,7 +225,8 @@ impl Polynomial {
         self.add_like_terms();
 
         // Filter to remove terms with coefficient 0
-        self.terms.retain(|term| term.coefficient != 0.0);
+        self.terms
+            .retain(|term| term.coefficient != Rational64::new(0, 1));
 
         self.sort_terms();
     }
@@ -245,7 +249,7 @@ impl Sub for Polynomial {
 
     fn sub(self, mut other: Self) -> Self {
         for term in &mut other.terms {
-            term.coefficient *= -1.0;
+            term.coefficient *= -1;
         }
 
         self.add(other)
@@ -285,7 +289,7 @@ impl Div for Polynomial {
         if dividend.terms.len() == 0 {
             return Polynomial {
                 terms: vec![Term {
-                    coefficient: 0.0,
+                    coefficient: Rational64::new(0, 1),
                     variables: vec![],
                 }],
             };
@@ -306,7 +310,7 @@ impl Div for Polynomial {
 
         let zero_poly = Polynomial {
             terms: vec![Term {
-                coefficient: 0.0,
+                coefficient: Rational64::new(0, 1),
                 variables: vec![],
             }],
         };

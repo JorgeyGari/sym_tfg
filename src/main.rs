@@ -1,3 +1,4 @@
+use num::rational::Rational64;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
@@ -15,18 +16,19 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
         match part.as_rule() {
             Rule::term => {
                 let mut term = polynomial::Term {
-                    coefficient: 1.0,
+                    coefficient: Rational64::new(1, 1),
                     variables: Vec::new(),
                 };
                 for factor in part.into_inner() {
                     match factor.as_rule() {
                         Rule::sign => {
                             if factor.as_str() == "-" {
-                                term.coefficient *= -1.0;
+                                term.coefficient *= -1;
                             }
                         }
                         Rule::number => {
-                            term.coefficient *= factor.as_str().trim().parse::<f64>().unwrap();
+                            term.coefficient *=
+                                factor.as_str().trim().parse::<Rational64>().unwrap();
                         }
                         Rule::var => {
                             let variable = polynomial::Variable {
@@ -48,10 +50,16 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
     p
 }
 
-fn parse_assignment(assignment: Pairs<Rule>) -> (String, f64) {
+fn parse_assignment(assignment: Pairs<Rule>) -> (String, Rational64) {
     let mut iter = assignment;
     let var_name = iter.next().unwrap().as_str().to_string();
-    let var_value = iter.next().unwrap().as_str().trim().parse::<f64>().unwrap();
+    let var_value = iter
+        .next()
+        .unwrap()
+        .as_str()
+        .trim()
+        .parse::<Rational64>()
+        .unwrap();
     (var_name, var_value)
 }
 
@@ -81,7 +89,7 @@ fn main() {
         .next()
         .unwrap();
 
-    let mut var_values: Vec<(String, f64)> = Vec::new(); // Vector to store the values of the variables
+    let mut var_values: Vec<(String, Rational64)> = Vec::new(); // Vector to store the values of the variables
 
     for line in file.into_inner() {
         if line.as_str().trim().is_empty() {
@@ -93,6 +101,7 @@ fn main() {
             Rule::assign => {
                 let (var_name, var_value) = parse_assignment(line.into_inner());
                 var_values.push((var_name.clone(), var_value));
+
                 println!("\t{} = {}", var_name, var_value);
             }
             Rule::polynomial => {
