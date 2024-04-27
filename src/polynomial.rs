@@ -1,4 +1,6 @@
-use num::rational::Rational64;
+use num::rational::{Ratio, Rational64};
+use num_integer::lcm;
+use num_traits::cast::ToPrimitive;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -49,6 +51,25 @@ impl Term {
         }
         new_vars.retain(|v| v.degree != 0);
         self.variables = new_vars;
+    }
+}
+
+impl Mul for Term {
+    type Output = Term;
+    fn mul(self, other: Self) -> Term {
+        let mut result = Vec::new();
+        let mut new_vars = self.variables.clone();
+        new_vars.extend(other.variables.clone());
+        let mut new_term = Term {
+            coefficient: self.coefficient * other.coefficient,
+            variables: new_vars,
+        };
+        new_term.sort_vars();
+        new_term.factor();
+        result.push(new_term);
+        let mut product = Polynomial { terms: result };
+        product.simplify();
+        product.terms[0].clone()
     }
 }
 
@@ -213,7 +234,7 @@ impl Polynomial {
     }
 
     /// Simplifies the polynomial by sorting the terms, sorting the variables in each term, factoring each term, and adding like terms.
-    pub fn simplify(&mut self) {
+    pub fn simplify(&mut self) -> () {
         for term in &mut self.terms {
             term.sort_vars();
         }
@@ -229,6 +250,96 @@ impl Polynomial {
             .retain(|term| term.coefficient != Rational64::new(0, 1));
 
         self.sort_terms();
+    }
+
+    /// Multiplies the polynomial by the smallest scalar such that all coefficients are integers. Returns the scalar.
+    pub fn make_integer(&mut self) -> i64 {
+        // Get the lcm of the denominators of the coefficients
+        let mut lcm = 1;
+        for term in &self.terms {
+            let denom = term.coefficient.denom();
+            lcm = num_integer::lcm(lcm as i64, *denom);
+        }
+        // Multiply each coefficient by the lcm
+        for term in &mut self.terms {
+            term.coefficient *= Rational64::new(lcm, 1);
+        }
+        lcm
+    }
+
+    /// Finds the greatest common divisor of the coefficients of the terms in a single-variable polynomial with integer coefficients. Returns the gcd and the polynomial with the gcd factored out.
+    pub fn factor(&mut self) -> (Term, Polynomial) {
+        let mut factored_out = Term {
+            coefficient: Rational64::new(1, 1),
+            variables: vec![],
+        };
+        let mut factored = self.clone();
+
+        // Check the name of the variable that appears in all terms
+        let mut seen_vars = vec![];
+        for var in &self.terms[0].variables {
+            seen_vars.push(var.name.clone());
+        }
+        for term in &self.terms {
+            let mut curr_vars = vec![];
+            for var in &term.variables {
+                curr_vars.push(var.name.clone());
+            }
+            seen_vars = seen_vars
+                .iter()
+                .map(|x| x.clone())
+                .filter(|x| curr_vars.contains(x))
+                .collect();
+
+            if seen_vars.len() == 0 {
+                return (factored_out, factored); // No common variable, return the original polynomial
+            }
+        }
+        let var_name = seen_vars[0].clone(); // Always the first element
+                                             // TODO: Maybe add an option to this function to specify the variable to factor out
+
+        // Make the coefficients integers
+        let mut p = self.clone();
+        let adjust = p.make_integer();
+        p.simplify();
+
+        // Find the gcd of the coefficients
+        let mut gcd = p.terms[0].coefficient.numer().abs();
+        for term in &p.terms {
+            gcd = num_integer::gcd(gcd, term.coefficient.numer().abs());
+        }
+
+        // Find the smallest power of the variable that appears in all terms
+        let mut min_degree = p.terms[0].variables[0].degree;
+        for term in &p.terms {
+            for var in &term.variables {
+                if var.degree < min_degree && var.degree > 0 {
+                    min_degree = var.degree;
+                }
+            }
+        }
+
+        // Factor out the gcd
+        factored_out.coefficient = Rational64::new(gcd, 1);
+        factored_out.variables.push(Variable {
+            name: var_name,
+            degree: min_degree,
+        });
+
+        factored = factored
+            / Polynomial {
+                terms: vec![factored_out.clone()],
+            };
+
+        // Undo the scaling of the coefficients
+        for term in &mut factored.terms {
+            term.coefficient *= Rational64::new(1, adjust);
+        }
+        factored_out.coefficient *= Rational64::new(1, adjust);
+
+        factored.simplify();
+
+        return (factored_out, factored);
     }
 }
 
@@ -302,11 +413,11 @@ impl Div for Polynomial {
 
         let mut remainder = dividend.clone();
 
-        /* println!(
+        println!(
             "Remainder: {}\nDivisor: {}",
             remainder.as_string(),
             divisor.as_string()
-        ); */
+        );
 
         let zero_poly = Polynomial {
             terms: vec![Term {
@@ -315,18 +426,26 @@ impl Div for Polynomial {
             }],
         };
 
+        // if remainder.degree() < divisor.degree() {
+        //     return PolyRatio {
+        //         numerator: remainder,
+        //         denominator: divisor,
+        //     };
+        // }
+
         while remainder != zero_poly
             && remainder.terms.len() != 0
             && remainder.degree() >= divisor.degree()
+        // THIS LAST CONDITION IS THE PROBLEM (check what happens with 8/x)
         {
             let t = remainder.leading_term() / divisor.leading_term();
-            // remainder._print();
-            // println!("t: {:?}", t);
+            remainder._print();
+            //println!("t: {:?}", t);
             quotient = quotient + t.clone();
-            // println!("Quotient: {}", quotient.as_string());
+            //println!("Quotient: {}", quotient.as_string());
             remainder = remainder - (divisor.clone() * t.clone());
             remainder.simplify();
-            remainder._print();
+            //remainder._print();
         }
 
         quotient.simplify();
@@ -341,5 +460,173 @@ impl PartialEq for Polynomial {
         let mut other_copy = other.clone();
         other_copy.simplify();
         self.terms == other.terms
+    }
+}
+
+pub struct PolyRatio {
+    pub numerator: Polynomial,
+    pub denominator: Polynomial,
+}
+
+impl PolyRatio {
+    pub fn simplify(&mut self) {
+        // Simplify the initial numerator and denominator
+        self.numerator.simplify();
+        self.denominator.simplify();
+
+        println!("Numerator: {}", self.numerator.as_string());
+        println!("Denominator: {}", self.denominator.as_string());
+
+        // Make the coefficients integers
+        let mut n = self.numerator.clone();
+        let mut d = self.denominator.clone();
+        let adjust_n = n.make_integer();
+        let adjust_d = d.make_integer();
+
+        println!("Numerator: {}", n.as_string());
+        println!("Denominator: {}", d.as_string());
+
+        // Find the smallest negative exponent of each variable in the denominator
+        let mut vars_to_move: Vec<Variable> = vec![];
+        for term in &d.terms {
+            for var in &term.variables {
+                if var.degree < 0 {
+                    vars_to_move.push(var.clone());
+                }
+            }
+        }
+        for var in &mut vars_to_move {
+            var.degree *= -1;
+        }
+
+        // Multiply the numerator and denominator by the accumulated terms
+        n = n * Polynomial {
+            terms: vec![Term {
+                coefficient: Rational64::new(1, 1),
+                variables: vars_to_move.clone(),
+            }],
+        };
+        d = d * Polynomial {
+            terms: vec![Term {
+                coefficient: Rational64::new(1, 1),
+                variables: vars_to_move.clone(),
+            }],
+        };
+
+        println!("Numer: {}", n.as_string());
+        println!("Denom: {}", d.as_string());
+
+        // Find the smallest negative exponent of each variable in the denominator
+        let mut vars_to_move: Vec<Variable> = vec![];
+        for term in &n.terms {
+            for var in &term.variables {
+                if var.degree < 0 {
+                    vars_to_move.push(var.clone());
+                }
+            }
+        }
+        for var in &mut vars_to_move {
+            var.degree *= -1;
+        }
+
+        // Multiply the numerator and denominator by the accumulated terms
+        n = n * Polynomial {
+            terms: vec![Term {
+                coefficient: Rational64::new(1, 1),
+                variables: vars_to_move.clone(),
+            }],
+        };
+        d = d * Polynomial {
+            terms: vec![Term {
+                coefficient: Rational64::new(1, 1),
+                variables: vars_to_move.clone(),
+            }],
+        };
+
+        println!("Numer: {}", n.as_string());
+        println!("Denom: {}", d.as_string());
+
+        // Factor out as much as possible from the numerator and denominator
+        let (t1, mut n) = n.factor();
+        let (t2, mut d) = d.factor();
+
+        println!("t1: {:?}", t1);
+        println!("t2: {:?}", t2);
+
+        // We are going to divide the numerator and denominator, these are the values by default
+        let mut var_name = "".to_string();
+        let mut min_degree = 0;
+
+        // If the factored out terms share a variable
+        if t1.variables.len() != 0 && t2.variables.len() != 0 {
+            if t1.variables[0].name == t2.variables[0].name {
+                var_name = t1.variables[0].name.clone();
+                // Find the smallest power of the variable that appears in both terms
+                if t2.variables[0].degree < min_degree {
+                    min_degree = t2.variables[0].degree;
+                }
+            }
+        }
+
+        let gcd_term = Term {
+            // The term that will be canceled out in the numerator and denominator
+            coefficient: Rational64::from_integer(num_integer::gcd(
+                t1.coefficient.numer().abs(),
+                t2.coefficient.numer().abs(),
+            )),
+            variables: if var_name != "" {
+                // If the terms share a variable
+                vec![Variable {
+                    name: var_name,
+                    degree: min_degree,
+                }]
+            } else {
+                vec![]
+            },
+        };
+
+        // Cancel out the gcd from the numerator and denominator
+        n = n / Polynomial {
+            terms: vec![gcd_term.clone()],
+        };
+        d = d / Polynomial {
+            terms: vec![gcd_term.clone()],
+        };
+
+        // Undo the scaling of the coefficients
+        for term in &mut n.terms {
+            term.coefficient *= Rational64::new(1, adjust_n);
+        }
+        for term in &mut d.terms {
+            term.coefficient *= Rational64::new(1, adjust_d);
+        }
+
+        self.numerator = n;
+        self.denominator = d;
+
+        self.numerator.simplify();
+        self.denominator.simplify();
+    }
+
+    pub fn as_string(&self) -> String {
+        format!(
+            "({}) / ({})",
+            self.numerator.as_string(),
+            self.denominator.as_string()
+        )
+    }
+}
+
+impl Add for PolyRatio {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        let mut result = PolyRatio {
+            numerator: self.numerator.clone() * other.denominator.clone()
+                + other.numerator.clone() * self.denominator.clone(),
+            denominator: self.denominator.clone() * other.denominator.clone(),
+        };
+        result.simplify();
+        result
     }
 }

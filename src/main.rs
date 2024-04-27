@@ -2,6 +2,7 @@ use num::rational::Rational64;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
+use polynomial::{PolyRatio, Polynomial};
 use std::fs;
 
 mod polynomial;
@@ -82,6 +83,51 @@ fn parse_operation(operation: Pairs<Rule>) -> polynomial::Polynomial {
 }
 
 fn main() {
+    // Test simplify fractions
+    let mut p = Polynomial {
+        terms: vec![
+            polynomial::Term {
+                coefficient: Rational64::new(3, 1),
+                variables: vec![polynomial::Variable {
+                    name: "x".to_string(),
+                    degree: -1,
+                }],
+            },
+            polynomial::Term {
+                coefficient: Rational64::new(4, 1),
+                variables: vec![polynomial::Variable {
+                    name: "x".to_string(),
+                    degree: 1,
+                }],
+            },
+        ],
+    };
+    p.simplify();
+    println!("Polynomial p: {}", p.as_string());
+
+    let mut q = Polynomial {
+        terms: vec![polynomial::Term {
+            coefficient: Rational64::new(6, 1),
+            variables: vec![polynomial::Variable {
+                name: "x".to_string(),
+                degree: 1,
+            }],
+        }],
+    };
+
+    q.simplify();
+    println!("Polynomial q: {}", q.as_string());
+
+    let mut r = PolyRatio {
+        numerator: p,
+        denominator: q,
+    };
+
+    println!("Ratio: {}", r.as_string());
+
+    r.simplify();
+    println!("Ratio: {}", r.as_string());
+
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
