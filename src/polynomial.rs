@@ -289,6 +289,13 @@ impl Polynomial {
         };
         let mut factored = self.clone();
 
+        // Find the gcd of the coefficients
+        let mut gcd = self.terms[0].coefficient.numer().abs();
+        for term in &self.terms {
+            gcd = num_integer::gcd(gcd, term.coefficient.numer().abs());
+        }
+        factored_out.coefficient = Rational64::new(gcd, 1);
+
         // Check the name of the variable that appears in all terms
         let mut seen_vars = vec![];
         for var in &self.terms[0].variables {
@@ -306,6 +313,13 @@ impl Polynomial {
                 .collect();
 
             if seen_vars.len() == 0 {
+                if gcd != 0 {
+                    for term in &mut factored.terms {
+                        // println!("{:?}", term);
+                        // println!("{:?}", gcd);
+                        term.coefficient *= Rational64::new(1, gcd);
+                    }
+                }
                 return (factored_out, factored); // No common variable, return the original polynomial
             }
         }
@@ -562,7 +576,7 @@ impl PolyRatio {
         // println!("Denom: {}", d.as_string());
 
         // Factor out as much as possible from the numerator and denominator
-        let (t1, mut n) = n.factor(); // PROBLEM: EMPTY N??
+        let (t1, mut n) = n.factor();
         let (t2, mut d) = d.factor();
 
         // println!("t1: {:?}", t1);
@@ -646,6 +660,8 @@ impl PolyRatio {
     pub fn as_string(&self) -> String {
         if self.denominator.as_string() == "1".to_string() {
             self.numerator.as_string()
+        } else if self.denominator.as_string() == "0".to_string() {
+            "ERROR: Division by zero!".to_string()
         } else {
             format!(
                 "({}) / ({})",
