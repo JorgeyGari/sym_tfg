@@ -14,5 +14,5 @@ number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 var        = @{ ASCII_ALPHA }
 term       =  { sign? ~ (number | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
-file       =  { SOI ~ ((polynomial | assign) ~ NEWLINE?)* ~ EOI }
+file       =  { SOI ~ (expr ~ NEWLINE?)* ~ EOI }
 WHITESPACE = _{ " " }
