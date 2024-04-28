@@ -32,10 +32,24 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
                                 factor.as_str().trim().parse::<Rational64>().unwrap();
                         }
                         Rule::var => {
-                            let variable = polynomial::Variable {
+                            let mut variable = polynomial::Variable {
                                 name: factor.as_str().to_string(),
                                 degree: 1,
                             };
+                            for var_part in factor.into_inner() {
+                                match var_part.as_rule() {
+                                    Rule::number => {
+                                        let mut variable = variable.clone();
+                                        variable.degree = var_part.as_str().parse::<i32>().unwrap();
+                                    }
+                                    Rule::sign => {
+                                        if var_part.as_str() == "-" {
+                                            variable.degree *= -1;
+                                        }
+                                    }
+                                    _ => unreachable!(),
+                                }
+                            }
                             term.variables.push(variable);
                         }
                         Rule::EOI => (),
