@@ -420,11 +420,11 @@ impl Div for Polynomial {
 
         let mut remainder = dividend.clone();
 
-        println!(
-            "Remainder: {}\nDivisor: {}",
-            remainder.as_string(),
-            divisor.as_string()
-        );
+        // println!(
+        //     "Remainder: {}\nDivisor: {}",
+        //     remainder.as_string(),
+        //     divisor.as_string()
+        // );
 
         let zero_poly = Polynomial {
             terms: vec![Term {
@@ -482,8 +482,8 @@ impl PolyRatio {
         self.numerator.simplify();
         self.denominator.simplify();
 
-        println!("Numerator: {}", self.numerator.as_string());
-        println!("Denominator: {}", self.denominator.as_string());
+        // println!("Numerator: {}", self.numerator.as_string());
+        // println!("Denominator: {}", self.denominator.as_string());
 
         // Make the coefficients integers
         let mut n = self.numerator.clone();
@@ -491,8 +491,8 @@ impl PolyRatio {
         let adjust_n = n.make_integer();
         let adjust_d = d.make_integer();
 
-        println!("Numerator: {}", n.as_string());
-        println!("Denominator: {}", d.as_string());
+        // println!("Numerator: {}", n.as_string());
+        // println!("Denominator: {}", d.as_string());
 
         // Find the smallest negative exponent of each variable in the denominator
         let mut vars_to_move: Vec<Variable> = vec![];
@@ -521,8 +521,8 @@ impl PolyRatio {
             }],
         };
 
-        println!("Numer: {}", n.as_string());
-        println!("Denom: {}", d.as_string());
+        // println!("Numer: {}", n.as_string());
+        // println!("Denom: {}", d.as_string());
 
         // Find the smallest negative exponent of each variable in the denominator
         let mut vars_to_move: Vec<Variable> = vec![];
@@ -551,15 +551,15 @@ impl PolyRatio {
             }],
         };
 
-        println!("Numer: {}", n.as_string());
-        println!("Denom: {}", d.as_string());
+        // println!("Numer: {}", n.as_string());
+        // println!("Denom: {}", d.as_string());
 
         // Factor out as much as possible from the numerator and denominator
         let (t1, mut n) = n.factor();
         let (t2, mut d) = d.factor();
 
-        println!("t1: {:?}", t1);
-        println!("t2: {:?}", t2);
+        // println!("t1: {:?}", t1);
+        // println!("t2: {:?}", t2);
 
         // We are going to divide the numerator and denominator, these are the values by default
         let mut var_name = "".to_string();
@@ -570,8 +570,8 @@ impl PolyRatio {
             if t1.variables[0].name == t2.variables[0].name {
                 var_name = t1.variables[0].name.clone();
                 min_degree = t1.variables[0].degree.min(t2.variables[0].degree);
-                println!("Var name: {}", var_name);
-                println!("Min degree: {}", min_degree);
+                // println!("Var name: {}", var_name);
+                // println!("Min degree: {}", min_degree);
             }
         }
 
@@ -591,7 +591,7 @@ impl PolyRatio {
                 vec![]
             },
         };
-        println!("GCD: {:?}", gcd_term);
+        // println!("GCD: {:?}", gcd_term);
 
         n = n * Polynomial { terms: vec![t1] };
         d = d * Polynomial { terms: vec![t2] };
@@ -599,8 +599,8 @@ impl PolyRatio {
         // Cancel out the gcd from the numerator and denominator
         let mut inv = gcd_term.clone();
         inv.invert();
-        println!("Inv: {:?}", inv);
-        println!("Numerator: {}", n.as_string());
+        // println!("Inv: {:?}", inv);
+        // println!("Numerator: {}", n.as_string());
         n = n * Polynomial {
             terms: vec![inv.clone()],
         };
@@ -622,11 +622,15 @@ impl PolyRatio {
     }
 
     pub fn as_string(&self) -> String {
-        format!(
-            "({}) / ({})",
-            self.numerator.as_string(),
-            self.denominator.as_string()
-        )
+        if self.denominator.as_string().is_empty() {
+            self.numerator.as_string()
+        } else {
+            format!(
+                "({}) / ({})",
+                self.numerator.as_string(),
+                self.denominator.as_string()
+            )
+        }
     }
 
     pub fn evaluate(&mut self, values: &Vec<(String, Rational64)>) {
