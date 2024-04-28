@@ -2,7 +2,7 @@ use num::rational::Rational64;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
-use polynomial::{PolyRatio, Polynomial};
+use polynomial::PolyRatio;
 use std::fs;
 
 mod polynomial;
@@ -155,11 +155,13 @@ fn main() {
                 let mut p = parse_polynomial(line.into_inner());
                 p.evaluate(&var_values);
                 println!("\t{}", p.as_string());
+                // println!("{:?}", p);
             }
             Rule::operation => {
                 let mut result = parse_operation(line.into_inner());
                 result.evaluate(&var_values);
                 println!("\t{}", result.as_string());
+                // println!("{:?}", result);
             }
             Rule::EOI => (),
             _ => unreachable!(),

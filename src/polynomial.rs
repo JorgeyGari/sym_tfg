@@ -1,6 +1,4 @@
-use num::rational::{Ratio, Rational64};
-use num_integer::lcm;
-use num_traits::cast::ToPrimitive;
+use num::rational::Rational64;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -49,7 +47,7 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
-        new_vars.retain(|v| v.degree != 0);
+        new_vars.retain(|v| v.degree != 0); // FIXME
         self.variables = new_vars;
     }
 
@@ -195,13 +193,13 @@ impl Polynomial {
     pub fn as_string(&self) -> String {
         let mut result = String::new();
         for (i, term) in self.terms.iter().enumerate() {
-            if term.coefficient == Rational64::new(0, 1) {
+            if term.coefficient == Rational64::new(0, 1) && self.terms.len() > 1 {
                 continue;
             }
             if i != 0 && term.coefficient > Rational64::new(0, 1) {
                 result.push_str("+");
             }
-            if term.coefficient != Rational64::new(1, 1) {
+            if term.variables.is_empty() || term.coefficient != Rational64::new(1, 1) {
                 result.push_str(&term.coefficient.to_string());
             }
             for variable in &term.variables {
@@ -256,6 +254,14 @@ impl Polynomial {
         // Filter to remove terms with coefficient 0
         self.terms
             .retain(|term| term.coefficient != Rational64::new(0, 1));
+
+        // Add a term with coefficient 0 if all terms were removed
+        if self.terms.is_empty() {
+            self.terms.push(Term {
+                coefficient: Rational64::new(0, 1),
+                variables: vec![],
+            });
+        }
 
         self.sort_terms();
     }
@@ -443,7 +449,7 @@ impl Div for Polynomial {
         while remainder != zero_poly
             && remainder.terms.len() != 0
             && remainder.degree() >= divisor.degree()
-        // THIS LAST CONDITION IS THE PROBLEM (check what happens with 8/x)
+        // THIS LAST CONDITION was THE PROBLEM (check what happens with 8/x)
         {
             let t = remainder.leading_term() / divisor.leading_term();
             remainder._print();
@@ -471,6 +477,7 @@ impl PartialEq for Polynomial {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct PolyRatio {
     pub numerator: Polynomial,
     pub denominator: Polynomial,
@@ -555,7 +562,7 @@ impl PolyRatio {
         // println!("Denom: {}", d.as_string());
 
         // Factor out as much as possible from the numerator and denominator
-        let (t1, mut n) = n.factor();
+        let (t1, mut n) = n.factor(); // PROBLEM: EMPTY N??
         let (t2, mut d) = d.factor();
 
         // println!("t1: {:?}", t1);
@@ -619,10 +626,25 @@ impl PolyRatio {
 
         self.numerator.simplify();
         self.denominator.simplify();
+
+        if self.denominator == self.numerator {
+            self.numerator = Polynomial {
+                terms: vec![Term {
+                    coefficient: Rational64::new(1, 1),
+                    variables: vec![],
+                }],
+            };
+            self.denominator = Polynomial {
+                terms: vec![Term {
+                    coefficient: Rational64::new(1, 1),
+                    variables: vec![],
+                }],
+            };
+        }
     }
 
     pub fn as_string(&self) -> String {
-        if self.denominator.as_string().is_empty() {
+        if self.denominator.as_string() == "1".to_string() {
             self.numerator.as_string()
         } else {
             format!(
