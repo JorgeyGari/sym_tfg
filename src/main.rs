@@ -64,10 +64,10 @@ fn parse_assignment(assignment: Pairs<Rule>) -> (String, Rational64) {
     (var_name, var_value)
 }
 
-fn parse_operation(operation: Pairs<Rule>) -> polynomial::Polynomial {
+fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
     let mut iter = operation;
     let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
-    let mut result = first_poly;
+    let mut result = PolyRatio::from(first_poly);
 
     while let Some(op) = iter.next() {
         let next_poly = parse_polynomial(iter.next().unwrap().into_inner());
@@ -126,7 +126,7 @@ fn main() {
     println!("Ratio: {}", r.as_string());
 
     r.simplify();
-    println!("Ratio: {}", r.as_string());
+    println!("ratio: {}", r.as_string());
 
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 

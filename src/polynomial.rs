@@ -52,6 +52,14 @@ impl Term {
         new_vars.retain(|v| v.degree != 0);
         self.variables = new_vars;
     }
+
+    /// Inverts the term.
+    pub fn invert(&mut self) {
+        self.coefficient = Rational64::new(*self.coefficient.denom(), *self.coefficient.numer());
+        for var in &mut self.variables {
+            var.degree *= -1;
+        }
+    }
 }
 
 impl Mul for Term {
@@ -326,10 +334,9 @@ impl Polynomial {
             degree: min_degree,
         });
 
-        factored = factored
-            / Polynomial {
-                terms: vec![factored_out.clone()],
-            };
+        let mut inv: Term = factored_out.clone();
+        inv.invert();
+        factored = factored * Polynomial { terms: vec![inv] };
 
         // Undo the scaling of the coefficients
         for term in &mut factored.terms {
@@ -392,18 +399,18 @@ impl Mul for Polynomial {
 }
 
 impl Div for Polynomial {
-    type Output = Self;
-    fn div(self, other: Self) -> Self {
+    type Output = PolyRatio;
+    fn div(self, other: Self) -> PolyRatio {
         let mut dividend = self.clone();
         dividend.simplify();
 
         if dividend.terms.len() == 0 {
-            return Polynomial {
+            return PolyRatio::from(Polynomial {
                 terms: vec![Term {
                     coefficient: Rational64::new(0, 1),
                     variables: vec![],
                 }],
-            };
+            });
         }
 
         let mut divisor = other.clone();
@@ -426,12 +433,12 @@ impl Div for Polynomial {
             }],
         };
 
-        // if remainder.degree() < divisor.degree() {
-        //     return PolyRatio {
-        //         numerator: remainder,
-        //         denominator: divisor,
-        //     };
-        // }
+        if remainder.degree() < divisor.degree() {
+            return PolyRatio {
+                numerator: remainder,
+                denominator: divisor,
+            };
+        }
 
         while remainder != zero_poly
             && remainder.terms.len() != 0
@@ -449,7 +456,8 @@ impl Div for Polynomial {
         }
 
         quotient.simplify();
-        quotient
+        let ratio = PolyRatio::from(quotient);
+        ratio
     }
 }
 
@@ -561,10 +569,9 @@ impl PolyRatio {
         if t1.variables.len() != 0 && t2.variables.len() != 0 {
             if t1.variables[0].name == t2.variables[0].name {
                 var_name = t1.variables[0].name.clone();
-                // Find the smallest power of the variable that appears in both terms
-                if t2.variables[0].degree < min_degree {
-                    min_degree = t2.variables[0].degree;
-                }
+                min_degree = t1.variables[0].degree.min(t2.variables[0].degree);
+                println!("Var name: {}", var_name);
+                println!("Min degree: {}", min_degree);
             }
         }
 
@@ -584,14 +591,20 @@ impl PolyRatio {
                 vec![]
             },
         };
+        println!("GCD: {:?}", gcd_term);
+
+        n = n * Polynomial { terms: vec![t1] };
+        d = d * Polynomial { terms: vec![t2] };
 
         // Cancel out the gcd from the numerator and denominator
-        n = n / Polynomial {
-            terms: vec![gcd_term.clone()],
+        let mut inv = gcd_term.clone();
+        inv.invert();
+        println!("Inv: {:?}", inv);
+        println!("Numerator: {}", n.as_string());
+        n = n * Polynomial {
+            terms: vec![inv.clone()],
         };
-        d = d / Polynomial {
-            terms: vec![gcd_term.clone()],
-        };
+        d = d * Polynomial { terms: vec![inv] };
 
         // Undo the scaling of the coefficients
         for term in &mut n.terms {
@@ -615,6 +628,11 @@ impl PolyRatio {
             self.denominator.as_string()
         )
     }
+
+    pub fn evaluate(&mut self, values: &Vec<(String, Rational64)>) {
+        self.numerator.evaluate(values);
+        self.denominator.evaluate(values);
+    }
 }
 
 impl Add for PolyRatio {
@@ -628,5 +646,131 @@ impl Add for PolyRatio {
         };
         result.simplify();
         result
+    }
+}
+
+impl Sub for PolyRatio {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        let mut result = PolyRatio {
+            numerator: self.numerator.clone() * other.denominator.clone()
+                - other.numerator.clone() * self.denominator.clone(),
+            denominator: self.denominator.clone() * other.denominator.clone(),
+        };
+        result.simplify();
+        result
+    }
+}
+
+impl Mul for PolyRatio {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        let mut result = PolyRatio {
+            numerator: self.numerator.clone() * other.numerator.clone(),
+            denominator: self.denominator.clone() * other.denominator.clone(),
+        };
+        result.simplify();
+        result
+    }
+}
+
+impl Div for PolyRatio {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        let mut result = PolyRatio {
+            numerator: self.numerator.clone() * other.denominator.clone(),
+            denominator: self.denominator.clone() * other.numerator.clone(),
+        };
+        result.simplify();
+        result
+    }
+}
+
+impl From<Polynomial> for PolyRatio {
+    fn from(p: Polynomial) -> Self {
+        PolyRatio {
+            numerator: p,
+            denominator: Polynomial {
+                terms: vec![Term {
+                    coefficient: Rational64::new(1, 1),
+                    variables: vec![],
+                }],
+            },
+        }
+    }
+}
+
+impl Add<PolyRatio> for Polynomial {
+    type Output = PolyRatio;
+
+    fn add(self, other: PolyRatio) -> PolyRatio {
+        let upgraded_self = PolyRatio::from(self);
+        upgraded_self + other
+    }
+}
+
+impl Sub<PolyRatio> for Polynomial {
+    type Output = PolyRatio;
+
+    fn sub(self, other: PolyRatio) -> PolyRatio {
+        let upgraded_self = PolyRatio::from(self);
+        upgraded_self - other
+    }
+}
+
+impl Mul<PolyRatio> for Polynomial {
+    type Output = PolyRatio;
+
+    fn mul(self, other: PolyRatio) -> PolyRatio {
+        let upgraded_self = PolyRatio::from(self);
+        upgraded_self * other
+    }
+}
+
+impl Div<PolyRatio> for Polynomial {
+    type Output = PolyRatio;
+
+    fn div(self, other: PolyRatio) -> PolyRatio {
+        let upgraded_self = PolyRatio::from(self);
+        upgraded_self / other
+    }
+}
+
+impl Add<Polynomial> for PolyRatio {
+    type Output = PolyRatio;
+
+    fn add(self, other: Polynomial) -> PolyRatio {
+        let upgraded_other = PolyRatio::from(other);
+        self + upgraded_other
+    }
+}
+
+impl Sub<Polynomial> for PolyRatio {
+    type Output = PolyRatio;
+
+    fn sub(self, other: Polynomial) -> PolyRatio {
+        let upgraded_other = PolyRatio::from(other);
+        self - upgraded_other
+    }
+}
+
+impl Mul<Polynomial> for PolyRatio {
+    type Output = PolyRatio;
+
+    fn mul(self, other: Polynomial) -> PolyRatio {
+        let upgraded_other = PolyRatio::from(other);
+        self * upgraded_other
+    }
+}
+
+impl Div<Polynomial> for PolyRatio {
+    type Output = PolyRatio;
+
+    fn div(self, other: Polynomial) -> PolyRatio {
+        let upgraded_other = PolyRatio::from(other);
+        self / upgraded_other
     }
 }
