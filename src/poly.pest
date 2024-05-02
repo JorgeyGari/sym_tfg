@@ -11,9 +11,10 @@ assign = { var ~ "=" ~ (operation | polynomial) }
 
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
-var        = @{ var_name ~ ("^" ~ "(" ~ polynomial ~ ")")? }
+fraction   =  { number ~ "/" ~ number }
+var        = @{ var_name ~ ("^" ~ "(" ~ number ~ ("/" ~ number)? ~ ")")? }
 var_name   =  { ASCII_ALPHA }
-term       =  { sign? ~ (number | var)+ }
+term       =  { sign? ~ (number | "(" ~ fraction ~ ")" | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
 file       =  { SOI ~ (expr ~ NEWLINE?)* ~ EOI }
 WHITESPACE = _{ " " }

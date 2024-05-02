@@ -17,23 +17,19 @@ fn variable_from_string(var: &str) -> polynomial::Variable {
     let degree = iter
         .next()
         .map(|d| {
+            let clean = d.replace("(", "").replace(")", "");
             if d.contains('/') {
-                let parts: Vec<&str> = d.split('/').collect();
+                let parts: Vec<&str> = clean.split('/').collect();
                 let numerator = parts[0].trim().parse::<i64>().unwrap_or(1);
                 let denominator = parts[1].trim().parse::<i64>().unwrap_or(1);
                 Rational64::new(numerator, denominator)
             } else if d.contains('.') {
-                let clean_number = d.replace("(", "").replace(")", "");
-                let parts: Vec<&str> = clean_number.split('.').collect();
-                let numerator = clean_number
-                    .replace(".", "")
-                    .trim()
-                    .parse::<i64>()
-                    .unwrap_or(1);
+                let parts: Vec<&str> = clean.split('.').collect();
+                let numerator = clean.replace(".", "").trim().parse::<i64>().unwrap_or(1);
                 let denominator = 10_i64.pow(parts[1].len() as u32);
                 Rational64::new(numerator, denominator)
             } else {
-                d.trim().parse::<i64>().unwrap_or(1).into()
+                clean.trim().parse::<i64>().unwrap_or(1).into()
             }
         })
         .unwrap_or(1.into());
@@ -59,6 +55,14 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
                         Rule::number => {
                             term.coefficient *=
                                 factor.as_str().trim().parse::<Rational64>().unwrap();
+                        }
+                        Rule::fraction => {
+                            let mut iter = factor.into_inner();
+                            let numerator =
+                                iter.next().unwrap().as_str().trim().parse::<i64>().unwrap();
+                            let denominator =
+                                iter.next().unwrap().as_str().trim().parse::<i64>().unwrap();
+                            term.coefficient *= Rational64::new(numerator, denominator);
                         }
                         Rule::var => {
                             let variable = variable_from_string(factor.as_str());
