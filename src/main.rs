@@ -11,6 +11,20 @@ mod polynomial;
 #[grammar = "poly.pest"]
 pub struct PolyParser;
 
+fn variable_from_string(var: &str) -> polynomial::Variable {
+    let mut iter = var.split('^');
+    let name = iter.next().unwrap().to_string();
+    let degree = iter
+        .next()
+        .map(|d| {
+            d.trim_matches(|c| c == '(' || c == ')')
+                .parse::<i32>()
+                .unwrap_or(1)
+        })
+        .unwrap_or(1);
+    polynomial::Variable { name, degree }
+}
+
 fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
     let mut p = polynomial::Polynomial { terms: Vec::new() };
     for part in expression {
@@ -32,24 +46,7 @@ fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
                                 factor.as_str().trim().parse::<Rational64>().unwrap();
                         }
                         Rule::var => {
-                            let mut variable = polynomial::Variable {
-                                name: factor.as_str().to_string(),
-                                degree: 1,
-                            };
-                            for var_part in factor.into_inner() {
-                                match var_part.as_rule() {
-                                    Rule::number => {
-                                        let mut variable = variable.clone();
-                                        variable.degree = var_part.as_str().parse::<i32>().unwrap();
-                                    }
-                                    Rule::sign => {
-                                        if var_part.as_str() == "-" {
-                                            variable.degree *= -1;
-                                        }
-                                    }
-                                    _ => unreachable!(),
-                                }
-                            }
+                            let variable = variable_from_string(factor.as_str());
                             term.variables.push(variable);
                         }
                         Rule::EOI => (),
@@ -169,7 +166,7 @@ fn main() {
                 let mut p = parse_polynomial(line.into_inner());
                 p.evaluate(&var_values);
                 println!("\t{}", p.as_string());
-                // println!("{:?}", p);
+                println!("{:?}", p);
             }
             Rule::operation => {
                 let mut result = parse_operation(line.into_inner());
