@@ -1,11 +1,12 @@
 use num::rational::Rational64;
+use num::FromPrimitive;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub struct Variable {
     pub name: String,
-    pub degree: i32,
+    pub degree: Rational64,
 }
 
 impl PartialEq for Variable {
@@ -22,8 +23,12 @@ pub struct Term {
 
 impl Term {
     /// Find max degree of the variables in the term.
-    pub fn max_degree(&self) -> i32 {
-        self.variables.iter().map(|v| v.degree).max().unwrap_or(0)
+    pub fn max_degree(&self) -> Rational64 {
+        self.variables
+            .iter()
+            .map(|v| v.degree)
+            .max()
+            .unwrap_or(0.into())
     }
 
     /// Sorts the variables in the term in ascending order based on their names.
@@ -47,7 +52,7 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
-        new_vars.retain(|v| v.degree != 0); // FIXME
+        new_vars.retain(|v| v.degree != 0.into()); // FIXME
         self.variables = new_vars;
     }
 
@@ -125,8 +130,12 @@ pub struct Polynomial {
 
 impl Polynomial {
     /// Return the degree of the polynomial.
-    pub fn degree(&self) -> i32 {
-        self.terms.iter().map(|t| t.max_degree()).max().unwrap_or(0)
+    pub fn degree(&self) -> Rational64 {
+        self.terms
+            .iter()
+            .map(|t| t.max_degree())
+            .max()
+            .unwrap_or(0.into())
     }
 
     /// List each term in the polynomial.
@@ -138,7 +147,7 @@ impl Polynomial {
 
     /// Return the leading term of the polynomial.
     pub fn leading_term(&self) -> Term {
-        let mut max_degree = 0;
+        let mut max_degree = Rational64::new(0, 1);
         let mut leading_term = Term {
             coefficient: Rational64::new(0, 1),
             variables: Vec::new(),
@@ -160,10 +169,11 @@ impl Polynomial {
             let mut new_term = term.clone();
             for var in &mut new_term.variables {
                 if let Some(val) = values.iter().find(|(name, _)| name == &var.name) {
-                    for _ in 0..var.degree {
-                        new_term.coefficient *= val.1;
-                    }
-                    var.degree = 0; // Set the degree of the variable to 0, essentially removing it from the term
+                    let value = *val.1.clone().numer() as f64 / *val.1.denom() as f64;
+                    let expon = *var.degree.numer() as f64 / *var.degree.denom() as f64;
+                    new_term.coefficient =
+                        new_term.coefficient * Rational64::from_f64(value.powf(expon)).unwrap();
+                    var.degree = 0.into(); // Set the degree of the variable to 0, essentially removing it from the term
                 }
             }
             result.terms.push(new_term);
@@ -180,8 +190,14 @@ impl Polynomial {
                 .iter()
                 .map(|v| v.degree)
                 .max()
-                .unwrap_or(0)
-                .cmp(&a.variables.iter().map(|v| v.degree).max().unwrap_or(0));
+                .unwrap_or(0.into())
+                .cmp(
+                    &a.variables
+                        .iter()
+                        .map(|v| v.degree)
+                        .max()
+                        .unwrap_or(0.into()),
+                );
             if max_degree_cmp != Ordering::Equal {
                 return max_degree_cmp;
             }
@@ -204,7 +220,7 @@ impl Polynomial {
             }
             for variable in &term.variables {
                 result.push_str(&variable.name);
-                if variable.degree != 1 {
+                if variable.degree != 1.into() {
                     result.push_str(&format!("^({})", variable.degree));
                 }
             }
@@ -341,7 +357,7 @@ impl Polynomial {
         let mut min_degree = p.terms[0].variables[0].degree;
         for term in &p.terms {
             for var in &term.variables {
-                if var.degree < min_degree && var.degree > 0 {
+                if var.degree < min_degree && var.degree > 0.into() {
                     min_degree = var.degree;
                 }
             }
@@ -519,7 +535,7 @@ impl PolyRatio {
         let mut vars_to_move: Vec<Variable> = vec![];
         for term in &d.terms {
             for var in &term.variables {
-                if var.degree < 0 {
+                if var.degree < 0.into() {
                     vars_to_move.push(var.clone());
                 }
             }
@@ -549,7 +565,7 @@ impl PolyRatio {
         let mut vars_to_move: Vec<Variable> = vec![];
         for term in &n.terms {
             for var in &term.variables {
-                if var.degree < 0 {
+                if var.degree < 0.into() {
                     vars_to_move.push(var.clone());
                 }
             }
@@ -584,7 +600,7 @@ impl PolyRatio {
 
         // We are going to divide the numerator and denominator, these are the values by default
         let mut var_name = "".to_string();
-        let mut min_degree = 0;
+        let mut min_degree = 0.into();
 
         // If the factored out terms share a variable
         if t1.variables.len() != 0 && t2.variables.len() != 0 {

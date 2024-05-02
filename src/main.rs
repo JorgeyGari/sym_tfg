@@ -17,11 +17,26 @@ fn variable_from_string(var: &str) -> polynomial::Variable {
     let degree = iter
         .next()
         .map(|d| {
-            d.trim_matches(|c| c == '(' || c == ')')
-                .parse::<i32>()
-                .unwrap_or(1)
+            if d.contains('/') {
+                let parts: Vec<&str> = d.split('/').collect();
+                let numerator = parts[0].trim().parse::<i64>().unwrap_or(1);
+                let denominator = parts[1].trim().parse::<i64>().unwrap_or(1);
+                Rational64::new(numerator, denominator)
+            } else if d.contains('.') {
+                let clean_number = d.replace("(", "").replace(")", "");
+                let parts: Vec<&str> = clean_number.split('.').collect();
+                let numerator = clean_number
+                    .replace(".", "")
+                    .trim()
+                    .parse::<i64>()
+                    .unwrap_or(1);
+                let denominator = 10_i64.pow(parts[1].len() as u32);
+                Rational64::new(numerator, denominator)
+            } else {
+                d.trim().parse::<i64>().unwrap_or(1).into()
+            }
         })
-        .unwrap_or(1);
+        .unwrap_or(1.into());
     polynomial::Variable { name, degree }
 }
 
