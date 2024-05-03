@@ -193,6 +193,21 @@ fn main() {
                 println!("\t{}", result.as_string());
                 // println!("{:?}", result);
             }
+            Rule::solve => {
+                let mut iter = line.into_inner();
+                let p = parse_polynomial(iter.next().unwrap().into_inner());
+                let variable = iter.next().unwrap().as_str().to_string();
+                let result = if variable.is_empty() {
+                    println!("Solving...");
+                    // p.solve();
+                    panic!("Not implemented");
+                } else {
+                    println!("Solving for {}...", variable);
+                    // p.solve_for(&variable);
+                    panic!("Not implemented");
+                };
+                // println!("\t{}", result);
+            }
             Rule::EOI => (),
             _ => unreachable!(),
         }
