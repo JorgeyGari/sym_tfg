@@ -1,4 +1,5 @@
-use num::rational::Rational64;
+use core::panic;
+use num::rational::{Ratio, Rational64};
 use num::FromPrimitive;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
@@ -384,8 +385,119 @@ impl Polynomial {
 
         return (factored_out, factored);
     }
-}
 
+    /// Returns the name of the first variable in the polynomial.
+    pub fn first_var(&self) -> Option<String> {
+        if self.terms.len() == 0 {
+            panic!("Polynomial has no terms!");
+        } else if self.terms[0].variables.len() == 0 {
+            return None;
+        } else {
+            return Some(self.terms[0].variables[0].name.clone());
+        }
+    }
+
+    /// Finds the roots (numerical or symbolic) of the polynomial.
+    pub fn roots(&self, var: &str) -> Vec<PolyRatio> {
+        let mut result = Vec::new();
+        let mut self_copy = self.clone();
+
+        // Find out the degree of the polynomial
+        self_copy.simplify();
+        let degree = self.degree();
+
+        match degree {
+            d if d == 1.into() => {
+                // If the degree is 1, the polynomial is linear: ax + b = 0
+                // That means x = -b/a
+                let a = self.terms[0].coefficient.clone();
+                let b = Polynomial {
+                    terms: self.terms[1..].to_vec(),
+                };
+                let minus_b = PolyRatio::from(b)
+                    * PolyRatio::from(Polynomial {
+                        terms: vec![Term {
+                            coefficient: Rational64::new(-1, 1),
+                            variables: vec![],
+                        }],
+                    });
+                let root = minus_b
+                    / PolyRatio::from(Polynomial {
+                        terms: vec![Term {
+                            coefficient: a,
+                            variables: vec![],
+                        }],
+                    });
+                result.push(root);
+            }
+            d if d == 2.into() => {
+                // If the degree is 2, the polynomial is quadratic: ax^2 + bx + c = 0
+                // That means x = (-b ± sqrt(b^2 - 4ac)) / 2a
+                let a = self.terms[0].coefficient.clone();
+                let b = self.terms[1].coefficient.clone();
+                let c = self.terms[2].coefficient.clone();
+                let minus_b = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(-1, 1),
+                        variables: vec![],
+                    }],
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: b.clone(),
+                        variables: vec![],
+                    }],
+                });
+                let b_squared = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: b.clone(),
+                        variables: vec![],
+                    }],
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: b.clone(),
+                        variables: vec![],
+                    }],
+                });
+                let four_ac = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(4, 1),
+                        variables: vec![],
+                    }],
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: a.clone(),
+                        variables: vec![],
+                    }],
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: c.clone(),
+                        variables: vec![],
+                    }],
+                });
+                let discriminant = PolyRatio::from(b_squared - four_ac); // FIXME: Should be a square root. Implement powers for polynomials?
+                let two_a = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(2, 1),
+                        variables: vec![],
+                    }],
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: a.clone(),
+                        variables: vec![],
+                    }],
+                });
+                let root1 = (minus_b.clone() + discriminant.clone()) / two_a.clone();
+                let root2 = (minus_b - discriminant) / two_a;
+                result.push(root1);
+                result.push(root2);
+            }
+            _ => {
+                panic!("Higher degree polynomials not supported yet!");
+            }
+        }
+        return result;
+    }
+}
 impl Add for Polynomial {
     type Output = Self;
 

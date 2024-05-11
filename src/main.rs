@@ -1,3 +1,4 @@
+use core::panic;
 use num::rational::Rational64;
 use pest::iterators::Pairs;
 use pest::Parser;
@@ -195,18 +196,28 @@ fn main() {
             }
             Rule::solve => {
                 let mut iter = line.into_inner();
+                println!("Solving...");
                 let p = parse_polynomial(iter.next().unwrap().into_inner());
-                let variable = iter.next().unwrap().as_str().to_string();
-                let result = if variable.is_empty() {
-                    println!("Solving...");
-                    // p.solve();
+                println!("{:?}", p);
+                if let Some(var) = iter.next() {
+                    // Variable was specified
+                    let variable = var.as_str().to_string();
+                    println!("Solving for {}...", variable);
                     panic!("Not implemented");
                 } else {
-                    println!("Solving for {}...", variable);
-                    // p.solve_for(&variable);
-                    panic!("Not implemented");
+                    // No variable specified
+                    let variable = p.first_var().unwrap_or("".to_string());
+                    if variable.is_empty() {
+                        panic!("No variable to solve for");
+                    }
+                    println!("Solving...");
+                    let result = p.roots(&variable);
+                    // Print all the roots as strings
+                    for r in result {
+                        println!("{}", r.as_string());
+                    }
+                    // panic!("Not implemented");
                 };
-                // println!("\t{}", result);
             }
             Rule::EOI => (),
             _ => unreachable!(),
