@@ -12,7 +12,7 @@ assign = { var ~ "=" ~ (operation | polynomial) }
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 fraction   =  { number ~ "/" ~ number }
-var        = @{ var_name ~ ("^" ~ "(" ~ number ~ ("/" ~ number)? ~ ")")? }
+var        = @{ var_name ~ ("^" ~ "(" ~ sign? ~ number ~ ("/" ~ number)? ~ ")")? }
 var_name   =  { ASCII_ALPHA }
 term       =  { sign? ~ (number | "(" ~ fraction ~ ")" | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
