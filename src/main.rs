@@ -38,7 +38,10 @@ fn variable_from_string(var: &str) -> polynomial::Variable {
 }
 
 fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
-    let mut p = polynomial::Polynomial { terms: Vec::new() };
+    let mut p = polynomial::Polynomial {
+        terms: Vec::new(),
+        degree: 1.into(),
+    };
     for part in expression {
         match part.as_rule() {
             Rule::term => {
@@ -160,7 +163,7 @@ fn main() {
     // r.simplify();
     // println!("ratio (simplified): {}", r.as_string());
 
-    let unparsed_file = fs::read_to_string("input.txt").unwrap();
+    let unparsed_file = fs::read_to_string("input.bak").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
         .expect("unsuccessful parse")
