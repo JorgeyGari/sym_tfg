@@ -163,7 +163,30 @@ fn main() {
     // r.simplify();
     // println!("ratio (simplified): {}", r.as_string());
 
-    let unparsed_file = fs::read_to_string("input.bak").unwrap();
+    // Test squared polynomial
+    // let mut not_ab_squared = polynomial::Polynomial {
+    //     terms: vec![
+    //         polynomial::Term {
+    //             coefficient: Rational64::new(1, 1),
+    //             variables: vec![polynomial::Variable {
+    //                 name: "a".to_string(),
+    //                 degree: 1.into(),
+    //             }],
+    //         },
+    //         polynomial::Term {
+    //             coefficient: Rational64::new(1, 1),
+    //             variables: vec![polynomial::Variable {
+    //                 name: "b".to_string(),
+    //                 degree: 1.into(),
+    //             }],
+    //         },
+    //     ],
+    //     degree: 2.into(),
+    // };
+    // not_ab_squared.simplify();
+    // println!("(a + b)^2 = {}", not_ab_squared.as_string());
+
+    let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
         .expect("unsuccessful parse")

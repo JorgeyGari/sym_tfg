@@ -1,6 +1,6 @@
 use core::panic;
-use num::rational::{Ratio, Rational64};
-use num::FromPrimitive;
+use num::rational::Rational64;
+use num::{FromPrimitive, ToPrimitive};
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -53,7 +53,7 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
-        new_vars.retain(|v| v.degree != 0.into()); // FIXME
+        new_vars.retain(|v| v.degree != 0.into());
         self.variables = new_vars;
     }
 
@@ -62,6 +62,24 @@ impl Term {
         self.coefficient = Rational64::new(*self.coefficient.denom(), *self.coefficient.numer());
         for var in &mut self.variables {
             var.degree *= -1;
+        }
+    }
+
+    /// Returns the term to the power of q.
+    pub fn pow(&self, q: Rational64) -> Term {
+        let mut new_vars: Vec<Variable> = Vec::new();
+        for var in &self.variables {
+            new_vars.push(Variable {
+                name: var.name.clone(),
+                degree: var.degree * q.clone(),
+            });
+        }
+        Term {
+            coefficient: Rational64::from_f64(
+                self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()),
+            )
+            .unwrap(),
+            variables: new_vars,
         }
     }
 }
@@ -242,6 +260,9 @@ impl Polynomial {
                 }
             }
         }
+        if self.degree != 1.into() {
+            result = format!("({})^({})", result, self.degree);
+        }
         result
     }
 
@@ -274,6 +295,19 @@ impl Polynomial {
 
     /// Simplifies the polynomial by sorting the terms, sorting the variables in each term, factoring each term, and adding like terms.
     pub fn simplify(&mut self) -> () {
+        let d: Option<f64> = self.degree.to_f64();
+        // println!("Degree: {:?}", d);
+        if d.is_some() {
+            if self.terms.len() == 1 {
+                let exp = Rational64::from_f64(d.unwrap());
+                self.terms[0] = self.terms[0].pow(exp.unwrap());
+            } else if d.unwrap().fract() == 0.0 && d.unwrap() >= 2.0 {
+                for _i in 1..d.unwrap() as i64 {
+                    *self = self.clone() * self.clone();
+                }
+            }
+        }
+
         for term in &mut self.terms {
             term.sort_vars();
         }
@@ -504,7 +538,12 @@ impl Polynomial {
                     }],
                     degree: 1.into(),
                 });
-                let discriminant = PolyRatio::from(b_squared - four_ac); // FIXME: Should be a square root. Implement powers for polynomials?
+                let mut discriminant = b_squared.clone() - four_ac.clone();
+                discriminant.numerator.degree = Rational64::new(1, 2);
+                discriminant.denominator.degree = Rational64::new(1, 2);
+                println!("Discriminant: {}", discriminant.as_string());
+                discriminant.simplify(); // FIXME: Degrees are not being simplifie
+                println!("Discriminant: {}", discriminant.as_string());
                 let two_a = PolyRatio::from(Polynomial {
                     terms: vec![Term {
                         coefficient: Rational64::new(2, 1),
@@ -518,6 +557,7 @@ impl Polynomial {
                     }],
                     degree: 1.into(),
                 });
+                println!("Two a: {}", two_a.as_string());
                 let root1 = (minus_b.clone() + discriminant.clone()) / two_a.clone();
                 let root2 = (minus_b - discriminant) / two_a;
                 result.push(root1);
@@ -530,6 +570,7 @@ impl Polynomial {
         return result;
     }
 }
+
 impl Add for Polynomial {
     type Output = Self;
 
