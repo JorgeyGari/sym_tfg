@@ -74,11 +74,15 @@ impl Term {
                 degree: var.degree * q.clone(),
             });
         }
+        let ratio_coef =
+            Rational64::from_f64(self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()))
+                .unwrap();
+        if self.coefficient.denom() == &1 && ratio_coef.denom() != &1 {
+            // Don't convert expressions like sqrt(13) to a ratio
+            return self.clone();
+        }
         Term {
-            coefficient: Rational64::from_f64(
-                self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()),
-            )
-            .unwrap(),
+            coefficient: ratio_coef,
             variables: new_vars,
         }
     }
@@ -300,13 +304,15 @@ impl Polynomial {
         if d.is_some() {
             if self.terms.len() == 1 {
                 let exp = Rational64::from_f64(d.unwrap());
-                self.terms[0] = self.terms[0].pow(exp.unwrap());
+                let powered = self.terms[0].pow(exp.unwrap()); // TODO: Here, sqrt(13) becomes a ratio
+                self.terms = vec![powered];
             } else if d.unwrap().fract() == 0.0 && d.unwrap() >= 2.0 {
                 for _i in 1..d.unwrap() as i64 {
                     *self = self.clone() * self.clone();
                 }
             }
         }
+        // println!("Simplifying 1: {}", self.as_string());
 
         for term in &mut self.terms {
             term.sort_vars();
@@ -541,9 +547,9 @@ impl Polynomial {
                 let mut discriminant = b_squared.clone() - four_ac.clone();
                 discriminant.numerator.degree = Rational64::new(1, 2);
                 discriminant.denominator.degree = Rational64::new(1, 2);
-                println!("Discriminant: {}", discriminant.as_string());
-                discriminant.simplify(); // FIXME: Degrees are not being simplifie
-                println!("Discriminant: {}", discriminant.as_string());
+                // println!("Discriminant: {}", discriminant.as_string());
+                discriminant.simplify();
+                // println!("Discriminant: {}", discriminant.as_string());
                 let two_a = PolyRatio::from(Polynomial {
                     terms: vec![Term {
                         coefficient: Rational64::new(2, 1),
@@ -557,7 +563,7 @@ impl Polynomial {
                     }],
                     degree: 1.into(),
                 });
-                println!("Two a: {}", two_a.as_string());
+                // println!("Two a: {}", two_a.as_string());
                 let root1 = (minus_b.clone() + discriminant.clone()) / two_a.clone();
                 let root2 = (minus_b - discriminant) / two_a;
                 result.push(root1);
@@ -712,6 +718,9 @@ pub struct PolyRatio {
 impl PolyRatio {
     pub fn simplify(&mut self) {
         // Simplify the initial numerator and denominator
+        // println!("Numerator!: {}", self.numerator.as_string());
+        // println!("Denominator!: {}", self.denominator.as_string());
+
         self.numerator.simplify();
         self.denominator.simplify();
 

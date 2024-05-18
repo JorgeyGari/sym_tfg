@@ -1,10 +1,13 @@
 use core::panic;
-use num::rational::Rational64;
+use num::rational::{Ratio, Rational64};
+use num::Rational;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
 use polynomial::PolyRatio;
 use std::fs;
+
+use crate::polynomial::Polynomial;
 
 mod polynomial;
 
@@ -118,6 +121,31 @@ fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
 }
 
 fn main() {
+    let t = polynomial::Term {
+        coefficient: Rational64::new(4, 1),
+        variables: vec![
+            polynomial::Variable {
+                name: "x".to_string(),
+                degree: 1.into(),
+            },
+            polynomial::Variable {
+                name: "y".to_string(),
+                degree: 1.into(),
+            },
+        ],
+    };
+    let t2 = t.clone();
+    let tp = t.pow(Rational64::new(1, 2));
+
+    println!("{:?}", tp);
+    println!(
+        "{:?}",
+        Polynomial {
+            terms: vec![t, t2, tp],
+            degree: Rational64::new(1, 2),
+        }
+        .as_string()
+    );
     // Test simplify fractions
     // let mut p = Polynomial {
     //     terms: vec![
@@ -186,6 +214,7 @@ fn main() {
     // not_ab_squared.simplify();
     // println!("(a + b)^2 = {}", not_ab_squared.as_string());
 
+    /*
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
@@ -222,9 +251,8 @@ fn main() {
             }
             Rule::solve => {
                 let mut iter = line.into_inner();
-                println!("Solving...");
                 let p = parse_polynomial(iter.next().unwrap().into_inner());
-                println!("{:?}", p);
+                // println!("{:?}", p);
                 if let Some(var) = iter.next() {
                     // Variable was specified
                     let variable = var.as_str().to_string();
@@ -236,11 +264,10 @@ fn main() {
                     if variable.is_empty() {
                         panic!("No variable to solve for");
                     }
-                    println!("Solving...");
+                    // println!("Solving...");
                     let result = p.roots(&variable);
-                    // Print all the roots as strings
                     for r in result {
-                        println!("{}", r.as_string());
+                        println!("\t{}", r.as_string());
                     }
                     // panic!("Not implemented");
                 };
@@ -249,4 +276,5 @@ fn main() {
             _ => unreachable!(),
         }
     }
+    */
 }
