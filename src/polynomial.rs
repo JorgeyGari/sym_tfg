@@ -515,11 +515,25 @@ impl Polynomial {
             d if d == 1.into() => {
                 // If the degree is 1, the polynomial is linear: ax + b = 0
                 // That means x = -b/a
-                let a = self.terms[0].coefficient.clone();
-                let b = Polynomial {
-                    terms: self.terms[1..].to_vec(),
-                    degree: 1.into(),
-                };
+                let (a_term, a) = self_copy.find_sym_coeff(var, 1.into());
+                /*
+                println!("a: {:?}", a);
+                println!(
+                    "a_term: {:?}",
+                    Polynomial {
+                        terms: vec![a_term.clone()],
+                        degree: 1.into(),
+                    }
+                    .as_string()
+                );
+                */
+                let b = self.clone()
+                    - Polynomial {
+                        terms: vec![a_term],
+                        degree: 1.into(),
+                    };
+
+                // println!("b: {:?}", b);
                 let minus_b = PolyRatio::from(b)
                     * PolyRatio::from(Polynomial {
                         terms: vec![Term {
@@ -530,10 +544,7 @@ impl Polynomial {
                     });
                 let root = minus_b
                     / PolyRatio::from(Polynomial {
-                        terms: vec![Term {
-                            coefficient: a,
-                            variables: vec![],
-                        }],
+                        terms: vec![a],
                         degree: 1.into(),
                     });
                 result.push(vec![root]);
@@ -546,20 +557,11 @@ impl Polynomial {
                 // Find the term with x² by filtering the terms with the variable x and degree 2
                 let (a_term, a) = self.find_sym_coeff(var, 2.into());
                 let (b_term, b) = self.find_sym_coeff(var, 1.into());
-                let c: Polynomial = Polynomial {
-                    terms: vec![self
-                        .terms
-                        .iter()
-                        .find(|t| {
-                            !(t.variables == a_term.variables
-                                && t.coefficient == a_term.coefficient)
-                                && !(t.variables == b_term.variables
-                                    && t.coefficient == b_term.coefficient)
-                        })
-                        .unwrap()
-                        .clone()],
-                    degree: 1.into(),
-                };
+                let c: Polynomial = self.clone()
+                    - Polynomial {
+                        terms: vec![a_term.clone(), b_term.clone()],
+                        degree: 1.into(),
+                    };
                 /*
                 println!("a: {:?}", a);
                 println!(
