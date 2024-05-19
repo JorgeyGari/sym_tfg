@@ -121,31 +121,17 @@ fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
 }
 
 fn main() {
+    /*
     let t = polynomial::Term {
-        coefficient: Rational64::new(4, 1),
-        variables: vec![
-            polynomial::Variable {
-                name: "x".to_string(),
-                degree: 1.into(),
-            },
-            polynomial::Variable {
-                name: "y".to_string(),
-                degree: 1.into(),
-            },
-        ],
+        coefficient: Rational64::new(16, 1),
+        variables: vec![],
     };
-    let t2 = t.clone();
-    let tp = t.pow(Rational64::new(1, 2));
+    let mut tp = t.pow(Rational64::new(1, 2));
+    println!("{}", tp.as_string());
+    tp.simplify();
+    println!("{}", tp.as_string());
+    */
 
-    println!("{:?}", tp);
-    println!(
-        "{:?}",
-        Polynomial {
-            terms: vec![t, t2, tp],
-            degree: Rational64::new(1, 2),
-        }
-        .as_string()
-    );
     // Test simplify fractions
     // let mut p = Polynomial {
     //     terms: vec![
@@ -214,7 +200,6 @@ fn main() {
     // not_ab_squared.simplify();
     // println!("(a + b)^2 = {}", not_ab_squared.as_string());
 
-    /*
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
@@ -266,8 +251,20 @@ fn main() {
                     }
                     // println!("Solving...");
                     let result = p.roots(&variable);
-                    for r in result {
-                        println!("\t{}", r.as_string());
+                    for root in result {
+                        if root.len() == 1 {
+                            println!("\t{}", root[0].as_string());
+                        } else if root.len() > 1 {
+                            print!("\t{}", root[0].as_string());
+                            for ratio in &root[1..] {
+                                if ratio.numerator.terms[0].coefficient >= 0.into() {
+                                    print!(" + ");
+                                }
+                                print!("{}", ratio.as_string());
+                            }
+                            println!();
+                        }
+                        // println!("\t{}", r.as_string());
                     }
                     // panic!("Not implemented");
                 };
@@ -276,5 +273,4 @@ fn main() {
             _ => unreachable!(),
         }
     }
-    */
 }
