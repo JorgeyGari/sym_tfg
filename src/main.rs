@@ -236,7 +236,8 @@ fn main() {
             }
             Rule::solve => {
                 let mut iter = line.into_inner();
-                let p = parse_polynomial(iter.next().unwrap().into_inner());
+                let mut p = parse_polynomial(iter.next().unwrap().into_inner());
+                p.evaluate(&var_values);
                 // println!("{:?}", p);
                 if let Some(var) = iter.next() {
                     // Variable was specified

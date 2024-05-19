@@ -564,7 +564,7 @@ impl Polynomial {
                 let mut discriminant = b_squared.clone() - four_ac.clone();
                 discriminant.numerator.degree = Rational64::new(1, 2);
                 discriminant.denominator.degree = Rational64::new(1, 2);
-                println!("Discriminant: {}", discriminant.as_string());
+                // println!("Discriminant: {}", discriminant.as_string());
                 discriminant.simplify();
                 // println!("Discriminant: {}", discriminant.as_string());
                 let two_a = PolyRatio::from(Polynomial {
@@ -767,10 +767,10 @@ pub struct PolyRatio {
 impl PolyRatio {
     pub fn simplify(&mut self) {
         let mut warn = false;
-        if self.numerator.degree != 1.into() {
-            println!("Degree != 1\n{}", self.numerator.as_string());
-            warn = true;
-        }
+        // if self.numerator.degree != 1.into() {
+        //     println!("Degree != 1\n{}", self.numerator.as_string());
+        //     warn = true;
+        // }
         // Simplify the initial numerator and denominator
         // println!("Numerator!: {}", self.numerator.as_string());
         // println!("Denominator!: {}", self.denominator.as_string());
@@ -784,10 +784,10 @@ impl PolyRatio {
         // Make the coefficients integers
         let mut n = self.numerator.clone();
         let mut d = self.denominator.clone();
-        if warn {
-            println!("Numerator: {}", n.as_string());
-            println!("Denominator: {}", d.as_string());
-        }
+        // if warn {
+        //     println!("Numerator: {}", n.as_string());
+        //     println!("Denominator: {}", d.as_string());
+        // }
         let adjust_n = n.make_integer();
         let adjust_d = d.make_integer();
 
@@ -898,11 +898,11 @@ impl PolyRatio {
             terms: vec![t1.clone()],
             degree: 1.into(),
         };
-        if warn {
-            println!("n: {:?}", n);
-            println!("t1: {:?}", t1.clone());
-            println!("{:?}", vars_to_move);
-        }
+        // if warn {
+        //     println!("n: {:?}", n);
+        //     println!("t1: {:?}", t1.clone());
+        //     println!("{:?}", vars_to_move);
+        // }
         d = d * Polynomial {
             terms: vec![t2],
             degree: 1.into(),
