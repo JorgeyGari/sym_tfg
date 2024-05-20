@@ -123,7 +123,7 @@ fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
 fn main() {
     /*
     let t = polynomial::Term {
-        coefficient: Rational64::new(16, 1),
+        coefficient: Rational64::new(-13, 1),
         variables: vec![],
     };
     let mut tp = t.pow(Rational64::new(1, 2));
@@ -131,6 +131,8 @@ fn main() {
     tp.simplify();
     println!("{}", tp.as_string());
     */
+
+    // println!("{}", (-13_f64).powf(0.5));
 
     // Test simplify fractions
     // let mut p = Polynomial {
@@ -254,9 +256,9 @@ fn main() {
                     let result = p.roots(&variable);
                     for root in result {
                         if root.len() == 1 {
-                            println!("\t{}", root[0].as_string());
+                            println!("\t{}\t= {}", variable, root[0].as_string());
                         } else if root.len() > 1 {
-                            print!("\t{}", root[0].as_string());
+                            print!("\t{}\t= {}", variable, root[0].as_string());
                             for ratio in &root[1..] {
                                 if ratio.numerator.terms[0].coefficient >= 0.into() {
                                     print!(" + ");

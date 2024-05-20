@@ -74,7 +74,7 @@ impl Term {
                 degree: var.degree * q.clone(),
             });
         }
-        let ratio_coef =
+        let mut ratio_coef =
             Rational64::from_f64(self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()))
                 .unwrap();
         if self.coefficient.denom() == &1 && ratio_coef.denom() != &1 {
@@ -612,11 +612,37 @@ impl Polynomial {
                 }) * c.clone();
                 // println!("b_squared: {}", b_squared.as_string());
                 // println!("four_ac: {}", four_ac.as_string());
-                let mut discriminant = b_squared.clone() - four_ac.clone();
-                discriminant.numerator.degree = Rational64::new(1, 2);
-                discriminant.denominator.degree = Rational64::new(1, 2);
+                let discriminant = b_squared.clone() - four_ac.clone();
+                let mut sqrt_discriminant = discriminant.clone();
+                if (discriminant.numerator.terms[0].coefficient < 0.into())
+                    ^ (discriminant.denominator.terms[0].coefficient < 0.into())
+                {
+                    sqrt_discriminant = discriminant.clone()
+                        * PolyRatio::from(Polynomial {
+                            terms: vec![Term {
+                                coefficient: Rational64::new(-1, 1),
+                                variables: vec![],
+                            }],
+                            degree: 1.into(),
+                        })
+                        * PolyRatio::from(Polynomial {
+                            terms: vec![Term {
+                                coefficient: Rational64::new(1, 1),
+                                variables: vec![Variable {
+                                    name: "ⅈ".to_string(),
+                                    degree: Rational64::new(2, 1),
+                                }],
+                            }],
+                            degree: 1.into(),
+                        });
+                    println!("Discriminant: {}", discriminant.as_string());
+                    // println!("{}", discriminant.as_string());
+                    // panic!("Imaginary roots not supported yet!");
+                }
+                sqrt_discriminant.numerator.degree = Rational64::new(1, 2);
+                sqrt_discriminant.denominator.degree = Rational64::new(1, 2);
                 // println!("Discriminant: {}", discriminant.as_string());
-                discriminant.simplify();
+                sqrt_discriminant.simplify();
                 // println!("Discriminant: {}", discriminant.as_string());
                 let two_a = PolyRatio::from(Polynomial {
                     terms: vec![Term {
@@ -629,15 +655,15 @@ impl Polynomial {
                     degree: 1.into(),
                 });
                 // println!("Two a: {}", two_a.as_string());
-                if discriminant.numerator.degree != Rational64::new(1, 1) {
+                if sqrt_discriminant.numerator.degree != Rational64::new(1, 1) {
                     // println!("here");
                     let root1 = vec![
                         minus_b.clone() / two_a.clone(),
-                        discriminant.clone() / two_a.clone(),
+                        sqrt_discriminant.clone() / two_a.clone(),
                     ];
                     let root2 = vec![
                         minus_b.clone() / two_a.clone(),
-                        discriminant.clone()
+                        sqrt_discriminant.clone()
                             / (PolyRatio::from(Polynomial {
                                 terms: vec![Term {
                                     coefficient: Rational64::new(-1, 1),
@@ -649,8 +675,8 @@ impl Polynomial {
                     result.push(root1);
                     result.push(root2);
                 } else {
-                    let root1 = (minus_b.clone() + discriminant.clone()) / two_a.clone();
-                    let root2 = (minus_b - discriminant) / two_a;
+                    let root1 = (minus_b.clone() + sqrt_discriminant.clone()) / two_a.clone();
+                    let root2 = (minus_b - sqrt_discriminant) / two_a;
                     result.push(vec![root1]);
                     result.push(vec![root2]);
                 }
