@@ -480,6 +480,10 @@ impl Polynomial {
 
     /// Find symbolic coefficient by degree.
     pub fn find_sym_coeff(&self, var: &str, degree: Rational64) -> (Term, Term) {
+        let zero = Term {
+            coefficient: Rational64::new(0, 1),
+            variables: vec![],
+        };
         let term = self
             .terms
             .iter()
@@ -488,7 +492,8 @@ impl Polynomial {
                     .iter()
                     .any(|v| v.name == var && v.degree == degree)
             })
-            .unwrap_or_else(|| panic!("No term with {}^{}", var, degree))
+            // .unwrap_or_else(|| panic!("No term with {}^{}", var, degree))
+            .unwrap_or_else(|| &zero)
             .clone();
         let sym_coeff = Term {
             coefficient: term.coefficient.clone(),
@@ -506,9 +511,16 @@ impl Polynomial {
     pub fn roots(&self, var: &str) -> Vec<Vec<PolyRatio>> {
         let mut result = vec![Vec::new()];
         let mut self_copy = self.clone();
+        self_copy.simplify();
+
+        // Check if there is only one term in the polynomial with the variable
+        let var_terms: Vec<&Term> = self_copy
+            .terms
+            .iter()
+            .filter(|t| t.variables.iter().any(|v| v.name == var))
+            .collect();
 
         // Find out the degree of the polynomial
-        self_copy.simplify();
         let degree = self.degree();
 
         match degree {
@@ -635,7 +647,7 @@ impl Polynomial {
                             }],
                             degree: 1.into(),
                         });
-                    println!("Discriminant: {}", discriminant.as_string());
+                    println!("(ⅈ is the imaginary unit)");
                     // println!("{}", discriminant.as_string());
                     // panic!("Imaginary roots not supported yet!");
                 }
