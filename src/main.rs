@@ -240,37 +240,32 @@ fn main() {
                 let mut iter = line.into_inner();
                 let mut p = parse_polynomial(iter.next().unwrap().into_inner());
                 p.evaluate(&var_values);
-                // println!("{:?}", p);
+                let mut variable = p.first_var().unwrap_or("".to_string());
+                if variable.is_empty() {
+                    panic!("No variable to solve for");
+                }
                 if let Some(var) = iter.next() {
                     // Variable was specified
-                    let variable = var.as_str().to_string();
-                    println!("Solving for {}...", variable);
-                    panic!("Not implemented");
-                } else {
-                    // No variable specified
-                    let variable = p.first_var().unwrap_or("".to_string());
-                    if variable.is_empty() {
-                        panic!("No variable to solve for");
-                    }
-                    // println!("Solving...");
-                    let result = p.roots(&variable);
-                    for root in result {
-                        if root.len() == 1 {
-                            println!("\t{}\t= {}", variable, root[0].as_string());
-                        } else if root.len() > 1 {
-                            print!("\t{}\t= {}", variable, root[0].as_string());
-                            for ratio in &root[1..] {
-                                if ratio.numerator.terms[0].coefficient >= 0.into() {
-                                    print!(" + ");
-                                }
-                                print!("{}", ratio.as_string());
+                    variable = var.as_str().to_string();
+                }
+                // println!("Solving for {}...", variable);
+                let result = p.roots(&variable);
+                for root in result {
+                    if root.len() == 1 {
+                        println!("\t{}\t= {}", variable, root[0].as_string());
+                    } else if root.len() > 1 {
+                        print!("\t{}\t= {}", variable, root[0].as_string());
+                        for ratio in &root[1..] {
+                            if ratio.numerator.terms[0].coefficient >= 0.into() {
+                                print!(" + ");
                             }
-                            println!();
+                            print!("{}", ratio.as_string());
                         }
-                        // println!("\t{}", r.as_string());
+                        println!();
                     }
-                    // panic!("Not implemented");
-                };
+                    // println!("\t{}", r.as_string());
+                }
+                // panic!("Not implemented");
             }
             Rule::EOI => (),
             _ => unreachable!(),

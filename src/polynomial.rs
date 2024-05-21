@@ -513,15 +513,19 @@ impl Polynomial {
         let mut self_copy = self.clone();
         self_copy.simplify();
 
-        // Check if there is only one term in the polynomial with the variable
-        let var_terms: Vec<&Term> = self_copy
+        // Find out the degree of the polynomial, but only taking into account the variable var
+        let degree = self_copy
             .terms
             .iter()
-            .filter(|t| t.variables.iter().any(|v| v.name == var))
-            .collect();
-
-        // Find out the degree of the polynomial
-        let degree = self.degree();
+            .map(|t| {
+                t.variables
+                    .iter()
+                    .find(|v| v.name == var)
+                    .map(|v| v.degree)
+                    .unwrap_or(0.into())
+            })
+            .max()
+            .unwrap_or(0.into());
 
         match degree {
             d if d == 1.into() => {
@@ -692,6 +696,9 @@ impl Polynomial {
                     result.push(vec![root1]);
                     result.push(vec![root2]);
                 }
+            }
+            d if d == 3.into() => {
+                // If the degree is 3, the polynomial is cubic: ax³ + bx² + cx + d = 0
             }
             _ => {
                 panic!("Higher degree polynomials not supported yet!");
