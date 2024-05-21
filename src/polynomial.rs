@@ -1,5 +1,6 @@
+use core::panic;
 use num::rational::Rational64;
-use num::FromPrimitive;
+use num::{FromPrimitive, ToPrimitive};
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -52,7 +53,7 @@ impl Term {
                 new_vars.push(var1.clone());
             }
         }
-        new_vars.retain(|v| v.degree != 0.into()); // FIXME
+        new_vars.retain(|v| v.degree != 0.into());
         self.variables = new_vars;
     }
 
@@ -61,6 +62,34 @@ impl Term {
         self.coefficient = Rational64::new(*self.coefficient.denom(), *self.coefficient.numer());
         for var in &mut self.variables {
             var.degree *= -1;
+        }
+    }
+
+    /// Returns a polynomial containing the term to the power of q.
+    pub fn pow(&self, q: Rational64) -> Polynomial {
+        let mut new_vars: Vec<Variable> = Vec::new();
+        for var in &self.variables {
+            new_vars.push(Variable {
+                name: var.name.clone(),
+                degree: var.degree * q.clone(),
+            });
+        }
+        let mut ratio_coef =
+            Rational64::from_f64(self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()))
+                .unwrap();
+        if self.coefficient.denom() == &1 && ratio_coef.denom() != &1 {
+            // Don't convert expressions like sqrt(13) to a ratio
+            return Polynomial {
+                terms: vec![self.clone()],
+                degree: q,
+            };
+        }
+        Polynomial {
+            terms: vec![Term {
+                coefficient: ratio_coef,
+                variables: new_vars,
+            }],
+            degree: 1.into(),
         }
     }
 }
@@ -78,7 +107,10 @@ impl Mul for Term {
         new_term.sort_vars();
         new_term.factor();
         result.push(new_term);
-        let mut product = Polynomial { terms: result };
+        let mut product = Polynomial {
+            terms: result,
+            degree: 1.into(),
+        };
         product.simplify();
         product.terms[0].clone()
     }
@@ -87,8 +119,14 @@ impl Mul for Term {
 impl Div for Term {
     type Output = Polynomial;
     fn div(self, other: Self) -> Polynomial {
-        let dividend = Polynomial { terms: vec![self] };
-        let divisor = Polynomial { terms: vec![other] };
+        let dividend = Polynomial {
+            terms: vec![self],
+            degree: 1.into(),
+        };
+        let divisor = Polynomial {
+            terms: vec![other],
+            degree: 1.into(),
+        };
         let mut result = Vec::new();
         for term1 in &dividend.terms {
             for term2 in &divisor.terms {
@@ -106,7 +144,10 @@ impl Div for Term {
                 result.push(new_term);
             }
         }
-        let mut quotient = Polynomial { terms: result };
+        let mut quotient = Polynomial {
+            terms: result,
+            degree: 1.into(),
+        };
         quotient.simplify();
         quotient
     }
@@ -126,6 +167,7 @@ impl PartialEq for Term {
 #[derive(Debug, Clone)]
 pub struct Polynomial {
     pub terms: Vec<Term>,
+    pub degree: Rational64,
 }
 
 impl Polynomial {
@@ -164,7 +206,10 @@ impl Polynomial {
 
     /// Evaluate the polynomial at a given value for the variables.
     pub fn evaluate(&mut self, values: &Vec<(String, Rational64)>) {
-        let mut result = Polynomial { terms: Vec::new() };
+        let mut result = Polynomial {
+            terms: Vec::new(),
+            degree: 1.into(),
+        };
         for term in &self.terms {
             let mut new_term = term.clone();
             for var in &mut new_term.variables {
@@ -216,7 +261,11 @@ impl Polynomial {
                 result.push_str("+");
             }
             if term.variables.is_empty() || term.coefficient != Rational64::new(1, 1) {
-                result.push_str(&term.coefficient.to_string());
+                if term.coefficient == Rational64::new(-1, 1) && !term.variables.is_empty() {
+                    result.push_str("-");
+                } else {
+                    result.push_str(&term.coefficient.to_string());
+                }
             }
             for variable in &term.variables {
                 result.push_str(&variable.name);
@@ -224,6 +273,9 @@ impl Polynomial {
                     result.push_str(&format!("^({})", variable.degree));
                 }
             }
+        }
+        if self.degree != 1.into() {
+            result = format!("({})^({})", result, self.degree);
         }
         result
     }
@@ -257,6 +309,23 @@ impl Polynomial {
 
     /// Simplifies the polynomial by sorting the terms, sorting the variables in each term, factoring each term, and adding like terms.
     pub fn simplify(&mut self) -> () {
+        let d: Option<f64> = self.degree.to_f64();
+        // println!("Degree: {:?}", d);
+        if d.is_some() {
+            if self.terms.len() == 1 {
+                let exp = Rational64::from_f64(d.unwrap());
+                let powered = self.terms[0].pow(exp.unwrap()); // TODO: Here, sqrt(13) becomes a ratio
+                self.terms = powered.terms;
+                self.degree = powered.degree;
+            } else if d.unwrap().fract() == 0.0 && d.unwrap() >= 2.0 {
+                for _i in 1..d.unwrap() as i64 {
+                    *self = self.clone() * self.clone();
+                }
+                self.degree = 1.into();
+            }
+        }
+        // println!("Simplifying 1: {}", self.as_string());
+
         for term in &mut self.terms {
             term.sort_vars();
         }
@@ -299,6 +368,15 @@ impl Polynomial {
 
     /// Finds the greatest common divisor of the coefficients of the terms in a single-variable polynomial with integer coefficients. Returns the gcd and the polynomial with the gcd factored out.
     pub fn factor(&mut self) -> (Term, Polynomial) {
+        if self.degree != 1.into() {
+            return (
+                Term {
+                    coefficient: Rational64::new(1, 1),
+                    variables: vec![],
+                },
+                self.clone(),
+            ); // Only works for degree 1 polynomials
+        }
         let mut factored_out = Term {
             coefficient: Rational64::new(1, 1),
             variables: vec![],
@@ -372,7 +450,11 @@ impl Polynomial {
 
         let mut inv: Term = factored_out.clone();
         inv.invert();
-        factored = factored * Polynomial { terms: vec![inv] };
+        factored = factored
+            * Polynomial {
+                terms: vec![inv],
+                degree: 1.into(),
+            };
 
         // Undo the scaling of the coefficients
         for term in &mut factored.terms {
@@ -384,6 +466,246 @@ impl Polynomial {
 
         return (factored_out, factored);
     }
+
+    /// Returns the name of the first variable in the polynomial.
+    pub fn first_var(&self) -> Option<String> {
+        if self.terms.len() == 0 {
+            panic!("Polynomial has no terms!");
+        } else if self.terms[0].variables.len() == 0 {
+            return None;
+        } else {
+            return Some(self.terms[0].variables[0].name.clone());
+        }
+    }
+
+    /// Find symbolic coefficient by degree.
+    pub fn find_sym_coeff(&self, var: &str, degree: Rational64) -> (Term, Term) {
+        let zero = Term {
+            coefficient: Rational64::new(0, 1),
+            variables: vec![],
+        };
+        let term = self
+            .terms
+            .iter()
+            .find(|t| {
+                t.variables
+                    .iter()
+                    .any(|v| v.name == var && v.degree == degree)
+            })
+            // .unwrap_or_else(|| panic!("No term with {}^{}", var, degree))
+            .unwrap_or_else(|| &zero)
+            .clone();
+        let sym_coeff = Term {
+            coefficient: term.coefficient.clone(),
+            variables: term
+                .variables
+                .iter()
+                .filter(|v| v.name != var)
+                .cloned()
+                .collect(),
+        };
+        return (term, sym_coeff);
+    }
+
+    /// Finds the roots (numerical or symbolic) of the polynomial.
+    pub fn roots(&self, var: &str) -> Vec<Vec<PolyRatio>> {
+        let mut result = vec![Vec::new()];
+        let mut self_copy = self.clone();
+        self_copy.simplify();
+
+        // Find out the degree of the polynomial, but only taking into account the variable var
+        let degree = self_copy
+            .terms
+            .iter()
+            .map(|t| {
+                t.variables
+                    .iter()
+                    .find(|v| v.name == var)
+                    .map(|v| v.degree)
+                    .unwrap_or(0.into())
+            })
+            .max()
+            .unwrap_or(0.into());
+
+        match degree {
+            d if d == 1.into() => {
+                // If the degree is 1, the polynomial is linear: ax + b = 0
+                // That means x = -b/a
+                let (a_term, a) = self_copy.find_sym_coeff(var, 1.into());
+                /*
+                println!("a: {:?}", a);
+                println!(
+                    "a_term: {:?}",
+                    Polynomial {
+                        terms: vec![a_term.clone()],
+                        degree: 1.into(),
+                    }
+                    .as_string()
+                );
+                */
+                let b = self.clone()
+                    - Polynomial {
+                        terms: vec![a_term],
+                        degree: 1.into(),
+                    };
+
+                // println!("b: {:?}", b);
+                let minus_b = PolyRatio::from(b)
+                    * PolyRatio::from(Polynomial {
+                        terms: vec![Term {
+                            coefficient: Rational64::new(-1, 1),
+                            variables: vec![],
+                        }],
+                        degree: 1.into(),
+                    });
+                let root = minus_b
+                    / PolyRatio::from(Polynomial {
+                        terms: vec![a],
+                        degree: 1.into(),
+                    });
+                result.push(vec![root]);
+            }
+            d if d == 2.into() => {
+                // If the degree is 2, the polynomial is quadratic: ax² + bx + c = 0
+                // That means x = (-b ± sqrt(b² - 4ac)) / 2a
+                // TODO: Implement symbolic roots
+
+                // Find the term with x² by filtering the terms with the variable x and degree 2
+                let (a_term, a) = self.find_sym_coeff(var, 2.into());
+                let (b_term, b) = self.find_sym_coeff(var, 1.into());
+                let c: Polynomial = self.clone()
+                    - Polynomial {
+                        terms: vec![a_term.clone(), b_term.clone()],
+                        degree: 1.into(),
+                    };
+                /*
+                println!("a: {:?}", a);
+                println!(
+                    "a_term: {:?}",
+                    Polynomial {
+                        terms: vec![a_term],
+                        degree: 1.into(),
+                    }
+                    .as_string()
+                );
+                println!("b: {:?}", b);
+                println!(
+                    "b_term: {:?}",
+                    Polynomial {
+                        terms: vec![b_term],
+                        degree: 1.into(),
+                    }
+                    .as_string()
+                );
+                println!("c: {:?}", c.as_string());
+                println!("Polynomial: {}", self.as_string());
+                */
+
+                let minus_b = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(-1, 1),
+                        variables: vec![],
+                    }],
+                    degree: 1.into(),
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![b.clone()],
+                    degree: 1.into(),
+                });
+                let mut b_squared = PolyRatio::from(Polynomial {
+                    terms: vec![b.clone()],
+                    degree: 2.into(),
+                });
+                b_squared.simplify();
+                let four_ac = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(4, 1),
+                        variables: vec![],
+                    }],
+                    degree: 1.into(),
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![a.clone()],
+                    degree: 1.into(),
+                }) * c.clone();
+                // println!("b_squared: {}", b_squared.as_string());
+                // println!("four_ac: {}", four_ac.as_string());
+                let discriminant = b_squared.clone() - four_ac.clone();
+                let mut sqrt_discriminant = discriminant.clone();
+                if (discriminant.numerator.terms[0].coefficient < 0.into())
+                    ^ (discriminant.denominator.terms[0].coefficient < 0.into())
+                {
+                    sqrt_discriminant = discriminant.clone()
+                        * PolyRatio::from(Polynomial {
+                            terms: vec![Term {
+                                coefficient: Rational64::new(-1, 1),
+                                variables: vec![],
+                            }],
+                            degree: 1.into(),
+                        })
+                        * PolyRatio::from(Polynomial {
+                            terms: vec![Term {
+                                coefficient: Rational64::new(1, 1),
+                                variables: vec![Variable {
+                                    name: "ⅈ".to_string(),
+                                    degree: Rational64::new(2, 1),
+                                }],
+                            }],
+                            degree: 1.into(),
+                        });
+                    println!("(ⅈ is the imaginary unit)");
+                    // println!("{}", discriminant.as_string());
+                    // panic!("Imaginary roots not supported yet!");
+                }
+                sqrt_discriminant.numerator.degree = Rational64::new(1, 2);
+                sqrt_discriminant.denominator.degree = Rational64::new(1, 2);
+                // println!("Discriminant: {}", discriminant.as_string());
+                sqrt_discriminant.simplify();
+                // println!("Discriminant: {}", discriminant.as_string());
+                let two_a = PolyRatio::from(Polynomial {
+                    terms: vec![Term {
+                        coefficient: Rational64::new(2, 1),
+                        variables: vec![],
+                    }],
+                    degree: 1.into(),
+                }) * PolyRatio::from(Polynomial {
+                    terms: vec![a.clone()],
+                    degree: 1.into(),
+                });
+                // println!("Two a: {}", two_a.as_string());
+                if sqrt_discriminant.numerator.degree != Rational64::new(1, 1) {
+                    // println!("here");
+                    let root1 = vec![
+                        minus_b.clone() / two_a.clone(),
+                        sqrt_discriminant.clone() / two_a.clone(),
+                    ];
+                    let root2 = vec![
+                        minus_b.clone() / two_a.clone(),
+                        sqrt_discriminant.clone()
+                            / (PolyRatio::from(Polynomial {
+                                terms: vec![Term {
+                                    coefficient: Rational64::new(-1, 1),
+                                    variables: vec![],
+                                }],
+                                degree: 1.into(),
+                            }) * two_a.clone()),
+                    ];
+                    result.push(root1);
+                    result.push(root2);
+                } else {
+                    let root1 = (minus_b.clone() + sqrt_discriminant.clone()) / two_a.clone();
+                    let root2 = (minus_b - sqrt_discriminant) / two_a;
+                    result.push(vec![root1]);
+                    result.push(vec![root2]);
+                }
+            }
+            d if d == 3.into() => {
+                // If the degree is 3, the polynomial is cubic: ax³ + bx² + cx + d = 0
+            }
+            _ => {
+                panic!("Higher degree polynomials not supported yet!");
+            }
+        }
+        return result;
+    }
 }
 
 impl Add for Polynomial {
@@ -392,7 +714,10 @@ impl Add for Polynomial {
     fn add(self, other: Self) -> Self {
         let mut result = self.terms.clone();
         result.extend(other.terms);
-        let mut sum = Polynomial { terms: result };
+        let mut sum = Polynomial {
+            terms: result,
+            degree: 1.into(),
+        };
         sum.simplify();
         sum
     }
@@ -415,6 +740,17 @@ impl Mul for Polynomial {
 
     fn mul(self, other: Self) -> Self {
         let mut result = Vec::new();
+        if other
+            == (Polynomial {
+                terms: vec![Term {
+                    coefficient: Rational64::new(1, 1),
+                    variables: vec![],
+                }],
+                degree: 1.into(),
+            })
+        {
+            return self;
+        }
         for term1 in &self.terms {
             for term2 in &other.terms {
                 let mut new_vars = term1.variables.clone();
@@ -428,7 +764,10 @@ impl Mul for Polynomial {
                 result.push(new_term);
             }
         }
-        let mut product = Polynomial { terms: result };
+        let mut product = Polynomial {
+            terms: result,
+            degree: 1.into(), // FIXME !!
+        };
         product.simplify();
         product
     }
@@ -446,13 +785,17 @@ impl Div for Polynomial {
                     coefficient: Rational64::new(0, 1),
                     variables: vec![],
                 }],
+                degree: 1.into(),
             });
         }
 
         let mut divisor = other.clone();
         divisor.simplify();
 
-        let mut quotient = Polynomial { terms: vec![] };
+        let mut quotient = Polynomial {
+            terms: vec![],
+            degree: 1.into(),
+        };
 
         let mut remainder = dividend.clone();
 
@@ -467,6 +810,7 @@ impl Div for Polynomial {
                 coefficient: Rational64::new(0, 1),
                 variables: vec![],
             }],
+            degree: 1.into(),
         };
 
         if remainder.degree() < divisor.degree() {
@@ -515,7 +859,15 @@ pub struct PolyRatio {
 
 impl PolyRatio {
     pub fn simplify(&mut self) {
+        // let mut warn = false;
+        // if self.numerator.degree != 1.into() {
+        //     println!("Degree != 1\n{}", self.numerator.as_string());
+        //     warn = true;
+        // }
         // Simplify the initial numerator and denominator
+        // println!("Numerator!: {}", self.numerator.as_string());
+        // println!("Denominator!: {}", self.denominator.as_string());
+
         self.numerator.simplify();
         self.denominator.simplify();
 
@@ -525,11 +877,12 @@ impl PolyRatio {
         // Make the coefficients integers
         let mut n = self.numerator.clone();
         let mut d = self.denominator.clone();
+        // if warn {
+        //     println!("Numerator: {}", n.as_string());
+        //     println!("Denominator: {}", d.as_string());
+        // }
         let adjust_n = n.make_integer();
         let adjust_d = d.make_integer();
-
-        // println!("Numerator: {}", n.as_string());
-        // println!("Denominator: {}", d.as_string());
 
         // Find the smallest negative exponent of each variable in the denominator
         let mut vars_to_move: Vec<Variable> = vec![];
@@ -550,12 +903,14 @@ impl PolyRatio {
                 coefficient: Rational64::new(1, 1),
                 variables: vars_to_move.clone(),
             }],
+            degree: 1.into(),
         };
         d = d * Polynomial {
             terms: vec![Term {
                 coefficient: Rational64::new(1, 1),
                 variables: vars_to_move.clone(),
             }],
+            degree: 1.into(),
         };
 
         // println!("Numer: {}", n.as_string());
@@ -580,12 +935,14 @@ impl PolyRatio {
                 coefficient: Rational64::new(1, 1),
                 variables: vars_to_move.clone(),
             }],
+            degree: 1.into(),
         };
         d = d * Polynomial {
             terms: vec![Term {
                 coefficient: Rational64::new(1, 1),
                 variables: vars_to_move.clone(),
             }],
+            degree: 1.into(),
         };
 
         // println!("Numer: {}", n.as_string());
@@ -630,8 +987,19 @@ impl PolyRatio {
         };
         // println!("GCD: {:?}", gcd_term);
 
-        n = n * Polynomial { terms: vec![t1] };
-        d = d * Polynomial { terms: vec![t2] };
+        n = n * Polynomial {
+            terms: vec![t1.clone()],
+            degree: 1.into(),
+        };
+        // if warn {
+        //     println!("n: {:?}", n);
+        //     println!("t1: {:?}", t1.clone());
+        //     println!("{:?}", vars_to_move);
+        // }
+        d = d * Polynomial {
+            terms: vec![t2],
+            degree: 1.into(),
+        };
 
         // Cancel out the gcd from the numerator and denominator
         let mut inv = gcd_term.clone();
@@ -640,8 +1008,12 @@ impl PolyRatio {
         // println!("Numerator: {}", n.as_string());
         n = n * Polynomial {
             terms: vec![inv.clone()],
+            degree: 1.into(),
         };
-        d = d * Polynomial { terms: vec![inv] };
+        d = d * Polynomial {
+            terms: vec![inv],
+            degree: 1.into(),
+        };
 
         // Undo the scaling of the coefficients
         for term in &mut n.terms {
@@ -651,6 +1023,9 @@ impl PolyRatio {
             term.coefficient *= Rational64::new(1, adjust_d);
         }
 
+        // if warn && self.numerator.degree == 1.into() {
+        //     println!("Warning: Degree != 1");
+        // }
         self.numerator = n;
         self.denominator = d;
 
@@ -663,12 +1038,14 @@ impl PolyRatio {
                     coefficient: Rational64::new(1, 1),
                     variables: vec![],
                 }],
+                degree: 1.into(),
             };
             self.denominator = Polynomial {
                 terms: vec![Term {
                     coefficient: Rational64::new(1, 1),
                     variables: vec![],
                 }],
+                degree: 1.into(),
             };
         }
     }
@@ -756,6 +1133,7 @@ impl From<Polynomial> for PolyRatio {
                     coefficient: Rational64::new(1, 1),
                     variables: vec![],
                 }],
+                degree: 1.into(),
             },
         }
     }

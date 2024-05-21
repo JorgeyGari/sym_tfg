@@ -1,4 +1,4 @@
-expr = _{ assign | operation | polynomial }
+expr = _{ assign | operation | polynomial | solve }
 
 operation =  { "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")" ~ (op ~ "(" ~ polynomial ~ ")")* }
 op        = _{ add | sub | mul | div }
@@ -12,9 +12,11 @@ assign = { var ~ "=" ~ (operation | polynomial) }
 sign       =  { "+" | "-" }
 number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 fraction   =  { number ~ "/" ~ number }
-var        = @{ var_name ~ ("^" ~ "(" ~ number ~ ("/" ~ number)? ~ ")")? }
+var        = @{ var_name ~ ("^" ~ "(" ~ sign? ~ number ~ ("/" ~ number)? ~ ")")? }
 var_name   =  { ASCII_ALPHA }
 term       =  { sign? ~ (number | "(" ~ fraction ~ ")" | var)+ }
 polynomial =  { term ~ (WHITESPACE* ~ term)* }
 file       =  { SOI ~ (expr ~ NEWLINE?)* ~ EOI }
 WHITESPACE = _{ " " }
+
+solve = { "[" ~ polynomial ~ ("," ~ var_name)? ~ "]" }

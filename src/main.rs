@@ -1,9 +1,13 @@
-use num::rational::Rational64;
+use core::panic;
+use num::rational::{Ratio, Rational64};
+use num::Rational;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
 use polynomial::PolyRatio;
 use std::fs;
+
+use crate::polynomial::Polynomial;
 
 mod polynomial;
 
@@ -37,7 +41,10 @@ fn variable_from_string(var: &str) -> polynomial::Variable {
 }
 
 fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
-    let mut p = polynomial::Polynomial { terms: Vec::new() };
+    let mut p = polynomial::Polynomial {
+        terms: Vec::new(),
+        degree: 1.into(),
+    };
     for part in expression {
         match part.as_rule() {
             Rule::term => {
@@ -114,6 +121,19 @@ fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
 }
 
 fn main() {
+    /*
+    let t = polynomial::Term {
+        coefficient: Rational64::new(-13, 1),
+        variables: vec![],
+    };
+    let mut tp = t.pow(Rational64::new(1, 2));
+    println!("{}", tp.as_string());
+    tp.simplify();
+    println!("{}", tp.as_string());
+    */
+
+    // println!("{}", (-13_f64).powf(0.5));
+
     // Test simplify fractions
     // let mut p = Polynomial {
     //     terms: vec![
@@ -159,6 +179,29 @@ fn main() {
     // r.simplify();
     // println!("ratio (simplified): {}", r.as_string());
 
+    // Test squared polynomial
+    // let mut not_ab_squared = polynomial::Polynomial {
+    //     terms: vec![
+    //         polynomial::Term {
+    //             coefficient: Rational64::new(1, 1),
+    //             variables: vec![polynomial::Variable {
+    //                 name: "a".to_string(),
+    //                 degree: 1.into(),
+    //             }],
+    //         },
+    //         polynomial::Term {
+    //             coefficient: Rational64::new(1, 1),
+    //             variables: vec![polynomial::Variable {
+    //                 name: "b".to_string(),
+    //                 degree: 1.into(),
+    //             }],
+    //         },
+    //     ],
+    //     degree: 2.into(),
+    // };
+    // not_ab_squared.simplify();
+    // println!("(a + b)^2 = {}", not_ab_squared.as_string());
+
     let unparsed_file = fs::read_to_string("input.txt").unwrap();
 
     let file = PolyParser::parse(Rule::file, &unparsed_file)
@@ -192,6 +235,37 @@ fn main() {
                 result.evaluate(&var_values);
                 println!("\t{}", result.as_string());
                 // println!("{:?}", result);
+            }
+            Rule::solve => {
+                let mut iter = line.into_inner();
+                let mut p = parse_polynomial(iter.next().unwrap().into_inner());
+                p.evaluate(&var_values);
+                let mut variable = p.first_var().unwrap_or("".to_string());
+                if variable.is_empty() {
+                    panic!("No variable to solve for");
+                }
+                if let Some(var) = iter.next() {
+                    // Variable was specified
+                    variable = var.as_str().to_string();
+                }
+                // println!("Solving for {}...", variable);
+                let result = p.roots(&variable);
+                for root in result {
+                    if root.len() == 1 {
+                        println!("\t{}\t= {}", variable, root[0].as_string());
+                    } else if root.len() > 1 {
+                        print!("\t{}\t= {}", variable, root[0].as_string());
+                        for ratio in &root[1..] {
+                            if ratio.numerator.terms[0].coefficient >= 0.into() {
+                                print!(" + ");
+                            }
+                            print!("{}", ratio.as_string());
+                        }
+                        println!();
+                    }
+                    // println!("\t{}", r.as_string());
+                }
+                // panic!("Not implemented");
             }
             Rule::EOI => (),
             _ => unreachable!(),
