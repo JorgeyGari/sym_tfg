@@ -1,0 +1,100 @@
+\documentclass[en]{uc3mthesisIEEE}
+
+
+\usepackage{import}
+\usepackage{enumitem}  % control item separation -> \begin{itemize}[nosep]
+\usepackage{lipsum}  % dummy text
+\usepackage{placeins}  % \FloatBarrier -> prevents figures and tables from passing that point
+\usepackage{microtype}  % improves the spacing between words and letters
+
+\usepackage{mymacros}  % report-specific macros
+
+
+% silence ht warnings
+\usepackage{silence}
+\WarningFilter{latex}{`h' float specifier changed to `ht'}
+
+
+% REFERENCES
+\addbibresource{references.bib}  % bibliography file
+\import{}{glossary.tex}  % glossary file
+
+
+%	DOCUMENT
+
+% setup
+\degree{Bachelor's Degree in Applied Mathematics and Computing}
+\course{2023-2024}
+\title{Development of a Symbolic Calculator from Scratch}
+% \shorttitle{Short title}
+\author{Jorge Lázaro Ruiz}
+\tutors{Carlos Linares López}
+\place{Leganés, Madrid, Spain}
+\date{June 2024}
+
+\begin{document}
+
+  % COVER
+  \makecover
+
+  % EPIGRAPH
+  \makeepigraph
+    {Anything not saved will be lost.}  % quote
+    {Nintendo Wii quit screen}  % author
+    {Placeholder quote}  % source
+
+
+  % ABSTRACT
+  \begin{abstract}
+    \lipsum[1-3]
+    \keywords{Lorem, ipsum, dolor, sit, amet}
+  \end{abstract}
+
+
+  % ACKNOWLEDGEMENTS
+  \begin{acknowledgements}
+    % 
+  \end{acknowledgements}
+
+
+  % TOC
+  \tableofcontents
+  \listoffigures
+  \listoftables
+
+
+  % THESIS
+  \begin{thesis}
+    \includefrom{parts/}{introduction.tex}
+    \includefrom{parts/}{state_of_the_art.tex}
+    \includefrom{parts/}{analysis.tex}
+    \includefrom{parts/}{design.tex}
+    \includefrom{parts/}{implementation.tex}
+    \includefrom{parts/}{validation.tex}
+    \includefrom{parts/}{planning.tex}
+    \includefrom{parts/}{regulation.tex}
+    \includefrom{parts/}{conclusions.tex}
+    % \newpage
+    % \import{parts/}{example.tex}
+  \end{thesis}
+
+  % BIBLIOGRAPHY
+  \cleardoublepage
+  \label{bibliography}
+  \printbibliography[heading=bibintoc]
+
+  % GLOSSARY
+  \cleardoublepage
+  \label{glossary}
+	\printglossaries
+	% \printnoidxglossaries[type=\acronymtype]  % slower, but no need to do $ makeglossaries report
+
+
+  % APPENDICES
+  % \begin{appendices}
+  %   \chapter{My stuff}
+  %   \lipsum
+  % \end{appendices}
+
+
+\end{document}

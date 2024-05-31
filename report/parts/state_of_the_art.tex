@@ -1,0 +1,190 @@
+\chapter{State of the Art}\label{chap:state-of-the-art}
+
+Computer Algebra Systems (CAS) are mathematical software systems used in handling mathematical expressions involving abstract variables. Unlike a regular calculator, a CAS manipulates mathematical expressions symbolically, rather than numerically \parencite{bou2009computer}.
+
+Such systems provide means to perform often tedious calculations not only in a faster way than a human could, but also in a more reliable way since they are not prone to human errors. They are used in a wide range of applications, from simple arithmetic to complex calculus, and are used in various fields such as engineering, physics, and mathematics.
+
+However, the incentive to build these systems is not only to provide a tool for more efficient calculations, but also to circumvent the need for humans to perform what Lovelace called "the mechanical" section of the labors belonging to the mathematical sciences, and focus more on the parts of the work which require reasoning \parencite{lovelace1842sketch}.
+
+\section{The Comprehensive System}\label{sec:the-comprehensive-system}
+
+Davenport dates the first instances of computer algebra systems to 1953, when Kahrimanian and Nolan wrote their respective theses on analytical differentiation by means of digital computers \parencite{davenport1994computer}.
+
+Nolan's work, a method which he dubbed the "Comprehensive System," enabled the programmer to write functions in an intermediate code that was then interpreted by a master program that allowed the Whirlwind I computer to perform the required operations using its standard subroutines \parencite{nolan1953analytical}. The main advantage of this system was it allowed the user to input the functions in a natural form, akin to how one would write them on paper.
+
+As Nolan puts it, analytical expressions are "highly complex systems of coded information and can be written or orally stated in a number of different ways" \parencite{nolan1953analytical}. Thus, the challenge lies in finding a way to represent these expressions in a way that is both easy to input and easy to manipulate. His approach made use of a table of addresses each corresponding to a constant, a variable or an operation, taking advantage of Whirlwind I's instructions for special purposes, and the general procedure of the Comprehensive System was a sort of recusive divide-and-conquer algorithm, where the derivative to be computed was broken down into smaller, simpler derivatives to be computed.
+
+The Comprehensive System and coetaneous pioneering works had to face one of the main challenges of computer algebra systems \parencite{davenport1994computer}, as strictly applying the rules of differentiation to a function can lead to an explosion of terms, many of which are redundant. This is known as the problem of expression swell \parencite{laue2019equivalence}, and it is a common problem in computer algebra systems. For the result to be useful, it is necessary to simplify the expression output by the system.
+
+To illustrate this problem, consider the following example from Davenport's article \parencite{davenport1994computer}:
+
+\begin{equation}
+    \frac{\mathrm{d}}{\mathrm{d}x} \left( 2x + 3 \right) = 2 \times \frac{\mathrm{d}}{\mathrm{d}x} \left( x \right) + \frac{\mathrm{d}}{\mathrm{d}x} \left( 2 \right) \times x + \frac{\mathrm{d}}{\mathrm{d}x} \left( 3 \right)
+\end{equation}
+
+Although the result of this "literal" differentiation is correct, the expression is not simplified. One would expect the result to just be $2$. This shows that an extra layer needs to be applied to the system to rewrite the expressions given by the literal application of the operation rules, in order for it to be useful.
+
+\section{The pioneering systems of the 1960s}\label{sec:the-pioneering-systems-of-the-1960s}
+
+In the next decade, the 1960s, computer algebra programs were directly implemented in machine code, as a set of routines that were used by the programmer to perform the required operations \parencite{davenport1994computer}. In spite of this trend, some higher-level languages were starting to be used. The programming language Lisp, which makes use of symbolic expressions as its primary data structure \parencite{mccarthy1960recursive}, was created for computer algebra.
+
+During this time, mathematicians Bryan John Birch and Peter Swinnerton-Dyer published their conjecture on elliptic curves. The Birch and Swinnerton-Dyer conjecture is an unsolved problem in number theory, and was developed with aid of the EDSAC-2 computer at the University of Cambridge \parencite{birch1965notes}, making use of the machine's computations to analyze a myriad of elliptic curves in the search of a trend among them. This was one of the earliest instances of computer algebra being used to aid in the development of a mathematical conjecture.
+
+Davenport notes that three decades later the vast majority of computer algebra systems were still being written with a specific class of problems in mind, just like most of the programs from the 1960s \parencite{davenport1994computer}.
+
+\subsection{Automatic integration: SAINT and SIN}\label{subsec:automatic-integration-saint-and-sin}
+
+In 1961, as his doctoral disertation at MIT, James Slagle developed SAINT (Symbolic Automatic INTegrator), a heuristic-driven computer program that could solve symbolic integration problems, with a level of expertise similar to that of a "good college freshman" \parencite{slagle1963heuristic,geddes1992algorithms}.
+
+The functions that SAINT could handle included real constants, variables, finite sums or finite products of elementary functions, elementary functions raised to elementary functions, trigonometric functions of elementary functions, and logarithmic or inverse functions of elementary functions \parencite{slagle1963heuristic}.
+
+SAINT could perform transformations, trigonometric identities, substitutions, and other techniques to solve the integrals. It functioned on a system of goal-oriented rules, and Slagle estimated that it took an average of 2.4 minutes for it to finish solving an integration problem \parencite{slagle1963heuristic}.
+
+Years later, Joel Moses presented SIN (Symbolic INtegrator) \parencite{moses1967symbolic}, also as part of his doctoral thesis. Unlike SAINT, the approach SIN took was more algorithm-driven, hence more efficient, solving the same set of problems in just 0.6 minutes on average, with many of the problems in the set being solved in just the first stage of SIN's subgoal algorithm. SIN also included a larger set of methods than SAINT. Interestingly, MATHLAB's rational function module was used for the development of SIN \parencite{moses1967symbolic}.
+
+\subsection{MATHLAB, the first interactive system}\label{subsec:mathlab-68-the-first-interactive-system}
+
+In 1968, during the yearly edition of the IFIP Congress, a computer algebra system called MATHLAB 68 (not to be confused with MathWorks's MATLAB, an unrelated programming language which first appeared around a decade later) was reported on through a paper \parencite{engelman1968mathlab} authored by Carl Engelman, one of the developers. Although the first MATHLAB system was presented in the year 1965 as the first interactive system designed to be used as a symbolic calculator, this version was an improved one, and it was also a successor to the Symbolic Mathematical Laboratory, another system developed by William Martin in 1967 \parencite{geddes1992algorithms}.
+
+MATHLAB 68 was written in Lisp for the PDP-6 ITS system at the Massachussets Institute of Technology, and introduced many of the features that are now common in computer algebra systems, as will be explored in the following overview of the system. It was designed with modularity in mind, allowing extensibility of said modules, and even having different data representations suited for each of them. This, of course, meant that when communicating data between modules, a translation was necessary. According to Egelman, MATHLAB 68 shows "an overemphasis in its design compromises on programming ease," \parencite{engelman1971legacy} hinting at its small, disjointed team of developers as the likely cause of this. Despite this, many other, more modern, computer algebra systems are greatly in debt with MATHLAB 68.
+
+The fact that MATHLAB systems were written in Lisp is not fortuitous, as Lisp was designed to be a language for symbolic computation \parencite{touretzky2013common}. In fact, many of their features were made possible by the use of Lisp. For example, MATHLAB 68's internal modules represent their data in one of two main ways: prefix expressions and rational expressions \parencite{engelman1971legacy}. The former are Lisp S-Expressions, that is, functional lists where the first element is the function and the rest are its arguments, such as \verb|(PLUS(TIMES A(EXPT 2)) (TIMES B X))| to represent the expression $ax^2 + bx$.
+
+This representation, however, was not useful for manipulating polynomials, raising the need of the aforementioned rational expressions. These were recursive representations of polynomials, where a polynomial was represented as a list of the coefficients multiplying the powers of the variable, such as $x^2 + 4$ being represented by \verb|(1 0 4)|. The zero polynomial is represented as \verb|NIL| in this system. When a polynomial of $n$ variables was needed, it was represented as a list of the coefficients, which are also polynomials of $n - 1$ variables \parencite{engelman1971legacy}. This way, in order to represent the polynomial $ax^2 + a^2$, a second-degree polynomial in $x$, one would determine the coefficients are $a$ for the second-degree term, $0$ for the first degree term, and $a^2$ for the constant term. Because the non-zero coefficients are polynomials of $a$, they are in turn represented as \verb|(1 0)| and \verb|(1 0 1)|, respectively. Thus, the polynomial $ax^2 + a^2$ would be represented as \verb|((1 0) NIL (1 0 0))|.
+
+The system handles the different representations of data from different modules by storing each of them. Representations of stored expressions were saved just as they were computed. This allowed users to look at past expression just as they would expect them, and in just a second of elapsed time \parencite{engelman1971legacy}.
+
+MATHLAB 68 sported a sort of "lazy evaluation" utilizing Lisp's QUOTE mechanism, which allowed the system to delay the evaluation of an expression or a function until it was needed. Contrary to the common practice, variables in MATHLAB 68 are quoted unless they are preceded by a single-quote mark (\verb|'|) \parencite{engelman1971legacy}. Engelman illustrates this difference by proposing that, if \verb|Y| is assigned the value of \verb|SIN(X)|, then \verb|DERIV(Y,X)| would evaluate to $\frac{\mathrm{d}y}{\mathrm{d}x}$ and, in contrast, \verb|DERIV('Y,X)| would evaluate to $\frac{\mathrm{d}}{\mathrm{d}x} \sin(x)$, "unquoting" (evaluating) the expression assigned to \verb|Y|. In order to actually find the derivative of $\sin(x)$, the command \verb|'DERIV('Y,X)| (evaluating both \verb|Y| and the result of the derivative) would return \verb|COS(X)|. If the user were to input \verb|'DERIV(Y,X)|, they may be surprised to find that the system would return \verb|0|, as \verb|Y| was not unquoted, therefore the system did not know that it was dependent on \verb|X|. If the user had declared this dependency beforehand, however, then the result would have been the same as with \verb|DERIV(Y,X)|.
+
+This mechanism is symbolic of MATHLAB 68's design philosophy of preventing the system from making assumptions that rob the user of control over the data. The user is expected to prefer one of the two options, either quoting every variable by default or evaluating them. This design choice, as Engelman admits \parencite{engelman1971legacy}, is inferior to the approach of variables always being evaluated unless no value has been assigned to them.
+
+User data was classified into one of three classes: expressions, equations and functions, each with their own behaviors when operated upon. Internally, these data types are differentiated by the leading term in their prefix representations. A prefix representation lead by the atom \verb|EQUAL| is identified as an equation, while one lead by the atom \verb|LAMBDA| is processed as a function. Any other representation not falling into one of these two categories is considered an expression \parencite{engelman1971legacy}.
+
+The addition of two expressions is simply the result of concatenating them with a "\verb|+|" in between if the switch for simplification was turned off by the user. Adding an expression to an equation results in the expression being added to both the left-hand side and the right-hand side of the equation. Behavior for adding two functions is only allowed when the number of arguments is the same, and Engelman notes that the definition of function addition in MATHLAB 68 may not even be commutative when the functions being added contain free variables \parencite{engelman1971legacy}.
+
+As for editing mathematical expressions, MATHLAB 68 had the top-level function \verb|TERM|, a substitute for a real editor that never came to be \parencite{engelman1971legacy}. This function works as an iterator, as \verb|'TERM(n,expr)|, where \verb|n| is (or evaluates to) a positive integer, returns the \verb|n|$^\text{th}$ term of the expression \verb|expr|. For example, if \verb|expr| is a sum, then the value would be the \verb|n|$^\text{th}$ summand, and if \verb|expr| is an equation, then the user could access the left-hand side by using \verb|'TERM(1,expr)| and the right-hand side by using \verb|'TERM(2,expr)|. The usage of this function is also allowed in an iterative fashion. This behavior is reminiscent to that of indexing and iterators in languages of the object-oriented programming paradigm, or to Lisp's own \verb|NTH| function, which returns a pointer to the specified component of the input list \parencite{touretzky2013common}.
+
+User-defined functions in MATHLAB 68 were defined as macros, working as a substitution schema in most cases. When substitution is turned on, this can be quite powerful, as the user could define a function that is a substitution for a more complex expression, and then use this function in place of the expression. Additionally, with simplification turned on, all simplifications possible would be performed on the result of the function \parencite{engelman1971legacy}. Similarly, user-defined programs were defined as a collection of functions. Here is an example, taken from Engelman's paper, of a program that calculates the Runge-Kutta expansion for the solution of a differential equation $y' = f(x,y)$:
+
+\begin{verbatim}
+    PROG5(X1,X2,X3,X4,X5):X5$
+
+    RUNGE1(X0,Y0):"('PROG5(
+    (K1:'H*'F(X0,Y0)),
+    (K2:'H*'F(X0+'H/3,Y0+'K1/3)),
+    (K3:'H*'F(X0+2/3*'H,Y0-'K1/3+'K2)),
+    (K4:'H*'F(X0+'H,Y0+'K1-'K2+'K3)),
+    (Y0+E:I/8*('K1+3*'K2+3*'K3+'K4))
+    ))$
+
+    RUNGE2():"('PROG3 (
+    (X0:'X0+'H),
+    (Y0:'Y0+'K),
+    'RUNGE1('X0,'Y0)
+    ))$
+
+    PROG3(X,Y,Z):Z$
+    RUNGE():"(ANS('Y0,'RUNGE1(0,0),'RUNGE2(),'RUNGE2(),
+    'RUNGE2(),'RUNGE2(),'RUNGE2(),'RUNGE2(),
+    'RUNGE2(),'RUNGE2()$
+    ))$
+\end{verbatim}
+
+Unquoting is disabled when inside double-quotation marks (\verb|"|), which allows the user to define functions that are not evaluated until they are called. MATHLAB 68 turns one of its quirks into a powerful feature, as it allows the user to define functions that are dependent on other functions, and then call them in a specific order.
+
+The library of algorithms included in MATHLAB 68 contained a variety of functions, such as a greatest common divisor finder for polynomials, factorization of polynomials,  partial fraction expansion, direct and inverse Laplace transforms, integration of single-variable functions via Hermite's method \parencite{hardy1916integration}, among others.
+
+Another one of these algorithms is \verb|SOLVE|, which tries to find the solutions to a rational equation for the variable specified by the user. The algorithm represents the result of the subtraction of the right-hand side to the left-hand side as a rational function and then tries to factorize the polynomial in the numerator. Roots are reported to the user as they are found, along with their respective multiplicities, but, because the algorithm will return a list of expressions, a form of data that is not considered in the system, the roots are not stored but instead given automatically generated names, which Engelman admits is a syntactical weakness of the system \parencite{engelman1971legacy}.
+
+\verb|RATSIMP| (RATional SIMPlification) is another interesting one, as it ties into the way MATHLAB 68 handles expression simplification. This function is a simplifier for rational expressions, and it works by expanding all products, performing all greatest common divisor operations in order to cancel and factor the result and, finally, returning a single numerator and a single denominator \parencite{engelman1971legacy}. In doing so, \verb|RATSIMP| takes advantage of the recursive nature of the aforementioned representation of rational expressions. This algorithm is particularly powerful, and many of the other, more specific algorithms, depend on it, such as the partial fraction algorithm performing a sort of "reverse \verb|RATSIMP|".
+
+However, the system already has a switch for simplification, called \verb|SIMP|. When this switch is turned on, the system will simplify the result of every operation, or so it should. MATHLAB's insistency in giving the user as many possibilities for representing a given expression becomes an obstacle for some of the simplification algorithms. For example, some complicated expressions may not be simplified automatically even when they are equal to zero, "a cardinal sin" in computer algebra systems \parencite{engelman1971legacy}. The general purpose simplification algorithm, based on work by Knut Korsvold \parencite{korsvold1966line}, eliminates the neutral elements of addition and multiplication, and performs all cancelations possible using an internal, temporary canonical representation of the expression. Engelman recounts that this same expression that the general purpose simplification algorithm was unable to simplify was then simplified by \verb|RATSIMP|, which was able to simplify the expression by expanding it and then canceling the terms.
+
+As for matrix algebra, MATHLAB 68 also had routines written for it for handling matrices, such as a row-reduction algorithm for the inversion of matrices. The system is known to have been able to invert up to a $10 \times 10$ matrix \parencite{engelman1971legacy}.
+
+Perhaps the most visually impressive, and another one of MATHLAB's firsts, was its output protocol, CHARYBDIS \parencite{millen1967charybdis}, a Lisp program written by Jonathan K. Millen. It was described as a two-dimensional output, where the system would print the expression in a way that would resemble how it would be written on paper. Since scientists at the time were not accustomed to Lisp's complicated parentheses-ridden output, having a way to display mathematical expressions in the universal two-dimensional form was a big advantage in getting mathematicians and other scientists to use computer algebra systems, and although plotters existed, they were slow and difficult to program, hence a solution for typewriter-like devices, which most computers already had for normal output, was the best compromise.
+
+The program takes advantage of Lisp's lists, which are tree structures composed of atoms, and Lisp's recursion capabilities to traverse the tree and print the expression in a two-dimensional form. Here is Millen's demonstration of CHARYBDIS's output for the solution of the differential equation $Ay'' + By' + Cy = e^{x}$ \parencite{millen1967charybdis}:
+
+\begin{verbatim}
+                  - 1      2
+        LOG(X) + -----LOG(X  + B*X + 1)
+                   2
+     + 
+                 B                    2X + B
+        - ----------------ARCTAN(----------------)
+                   2                      2
+           SQRT(- B  + 4)         SQRT(- B  + 4)
+\end{verbatim}
+
+With a simple grammar, a limited set of keywords, and an impressive dedicated output protocol, MATHLAB 68 was a system with never-before-seen features, hindered by some major weaknesses that its creators seeked to solve in the future \parencite{engelman1971legacy}.
+
+\section{Libraries and language extensions}\label{sec:libraries-and-language-extensions}
+Around the time MATHLAB 68 was presented, other computer algebra systems were being developed with a library-like approach, such as ALPAK and FORMAC, both based on the Fortran language \parencite{davenport1994computer}.
+
+ALPAK was a library for Fortran intended for efficient manipulation of polynomials and rational functions. It featured four distinct data types: integers, rational numbers, polynomials and rational functions. It also featured truncated power series and matrices as data structures \parencite{brown1966language}.
+
+FORMAC, on the other hand, was an extension of Fortran IV, and its main difference with the standard language it was based on was the representation of expressions: rather than as a series of computer instruction with a numerical value, they were a string of specially-coded symbols so, rather than Fortran's:
+
+\begin{verbatim}
+    X = 5.
+    Z = 4.
+    Y = X ** 2 + Z * 2.5/X.
+\end{verbatim}
+
+FORMAC would have:
+
+\begin{verbatim}
+    LET X = A + B.
+        Z = 4.
+    LET Y = X ** 2 + Z * 2.5/X.
+\end{verbatim}
+
+According to Davenport, these libraries and extensions were too difficult to use with proper storage management, and also algorithmically inadequate, hence their lack of success \parencite{davenport1994computer}.
+
+\section{The Golden Age}\label{subsec:the-golden-age}
+
+The 1970s are described as the Golden Age of computer algebra \parencite{davenport1994computer}. This is the time when the first general-purpose computer algebra systems were developed, such as Macsyma and Reduce. 
+
+\subsection{Macsyma}\label{sec:macsyma}
+After completing MATHLAB 68, Carl Engelman, William A. Martin and Joel Moses initiated a project to overhaul MATHLAB into a state-of-the-art computer algebra system \parencite{engelman1971legacy}. Although the project ditched most of the code from MATHLAB 68, it kept its heirarchical structure. The goal of Macsyma was to combine the results of Martin and Moses's respective research with Engelman's ideas from developing MATHLAB \parencite{martin1971macsyma}. It was written in Maclisp, a dialect of Lisp by the MIT's Project MAC, at which Macsyma was also being developed.
+
+Macsyma was able to manipulate algebraic expressions automatically in a number of ways, such as limit calculation, symbolic integration, equation solving, simplification, and more.
+
+Martin lists three main aspects of problem solving that should be taken into account by designers of interactive languages \parencite{martin1971macsyma}:
+
+\begin{itemize}
+    \item There are three types of errors in a command: lexical, syntactic, and semantic. The system should be able to detect, report and allow the user to correct these errors.
+    \item The user must specify the level of evaluation desired, suited to the problem at hand.
+    \item The system's language may be extended by the user either by renaming concepts already defined in the system, modifying concepts already defined in the system, or defining entirely new concepts.
+\end{itemize}
+
+There is a fourth aspect that Martin mentions as well, and that Macsyma is partiularly good at: the user and the system should interact in a form of discussion on the problem at hand. That is what MATHLAB was a pioneer in, as the first interactive computer algebra system. Macsyma's top-level editor allowed lines to be edited and retyped in case the user made a mistake \parencite{martin1971macsyma} (a feature Engelman expressed regret about not properly having in MATHLAB 68 \parencite{engelman1971legacy}), which was a big step forward in user interaction with computer algebra systems. Additionally, Macsyma automatically named each command and result, which allowed the user to refer to them later on.
+
+Below is an example of a Macsyma session, taken from Martin's paper \parencite{martin1971macsyma}:
+
+\begin{verbatim}
+    (C1) D(MU,T):-3*MU*SIGMA$
+    
+    (C2) D(SIGMA,T):EPSILON-2*SIGMA**2$
+
+    (C3) D(EPSILON,T):-SIGMA*(MU+2*EPSILON)$
+
+    (C4) F[0]:1$
+
+    (C5) G[0]:0$
+
+    (C6) F[I]:=EXPAND(-MU*G[I-1]+DIFF(F[I-1],T))$
+
+    (C7) G[I]:=EXPAND(F[I-1]+DIFF(G[I-1],T))$
+
+    (C8) F[5]@
+               2     3        2
+    (D8) 105 MU SIGMA  - 15 MU  SIGMA
+
+                             - 45 EPSILON MU SIGMA
+\end{verbatim}
+
+Martin's paper displays some examples of how Macsyma handles errors and allows the user to correct them, like using Macsyma's command \verb|SUBSTITUTE| to correct a typo in a command. In fact, the above session takes advantage of \verb|ALIAS| to abbreviate the name of the \verb|DERIVATIVE| command into just \verb|D|. This helps illustrate how Macsyma was truly designed with the user in mind, and how it fulfilled its objective of being a system that could interact with the user in a discussion-like manner.
+
+Making the system even more customizable by the user, the \verb|TELLSIMP| facility allowed users to define their own simplification rules to add to the built-in simplification routine \parencite{martin1971macsyma}. This would push Macsyma to potentially be used in some areas and solve some problems it wasn't originally designed to.

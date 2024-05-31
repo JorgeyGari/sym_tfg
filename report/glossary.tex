@@ -1,0 +1,23 @@
+\makeglossaries
+% \makenoidxglossaries  % slower, but no need to do $ makeglossaries report.tex
+
+
+% usage:
+% - \gls{term}: regular stuff
+% - \Gls{term}: first uppercase
+% - \glspl{term}: plural
+% - \Glspl{term}: you know the drill
+% - \glsdisp{term}{custom text}: link with custom text
+% https://www.overleaf.com/learn/latex/Glossaries
+
+
+\newglossaryentry{dummy} {
+  name = {dummy},
+  description = {dummy entry}
+}
+
+\newglossaryentrywithacronym{DUM}
+{dummy dummy dummy}
+{}
+
+\newacronym{gcd}{GCD}{Greatest Common Divisor}
