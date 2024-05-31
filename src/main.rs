@@ -228,7 +228,7 @@ fn main() {
                 let mut p = parse_polynomial(line.into_inner());
                 p.evaluate(&var_values);
                 println!("\t{}", p.as_string());
-                println!("{:?}", p);
+                // println!("{:?}", p);
             }
             Rule::operation => {
                 let mut result = parse_operation(line.into_inner());
