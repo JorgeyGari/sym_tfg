@@ -54,7 +54,7 @@ This representation, however, was not useful for manipulating polynomials, raisi
 
 The system handles the different representations of data from different modules by storing each of them. Representations of stored expressions were saved just as they were computed. This allowed users to look at past expression just as they would expect them, and in just a second of elapsed time \parencite{engelman1971legacy}.
 
-MATHLAB 68 sported a sort of "lazy evaluation" utilizing Lisp's QUOTE mechanism, which allowed the system to delay the evaluation of an expression or a function until it was needed. Contrary to the common practice, variables in MATHLAB 68 are quoted unless they are preceded by a single-quote mark (\verb|'|) \parencite{engelman1971legacy}. Engelman illustrates this difference by proposing that, if \verb|Y| is assigned the value of \verb|SIN(X)|, then \verb|DERIV(Y,X)| would evaluate to $\frac{\mathrm{d}y}{\mathrm{d}x}$ and, in contrast, \verb|DERIV('Y,X)| would evaluate to $\frac{\mathrm{d}}{\mathrm{d}x} \sin(x)$, "unquoting" (evaluating) the expression assigned to \verb|Y|. In order to actually find the derivative of $\sin(x)$, the command \verb|'DERIV('Y,X)| (evaluating both \verb|Y| and the result of the derivative) would return \verb|COS(X)|. If the user were to input \verb|'DERIV(Y,X)|, they may be surprised to find that the system would return \verb|0|, as \verb|Y| was not unquoted, therefore the system did not know that it was dependent on \verb|X|. If the user had declared this dependency beforehand, however, then the result would have been the same as with \verb|DERIV(Y,X)|.
+MATHLAB 68 sported a sort of "lazy evaluation" utilizing Lisp's \verb|QUOTE| mechanism, which allowed the system to delay the evaluation of an expression or a function until it was needed. Contrary to the common practice, variables in MATHLAB 68 are quoted unless they are preceded by a single-quote mark (\verb|'|) \parencite{engelman1971legacy}. Engelman illustrates this difference by proposing that, if \verb|Y| is assigned the value of \verb|SIN(X)|, then \verb|DERIV(Y,X)| would evaluate to $\frac{\mathrm{d}y}{\mathrm{d}x}$ and, in contrast, \verb|DERIV('Y,X)| would evaluate to $\frac{\mathrm{d}}{\mathrm{d}x} \sin(x)$, "unquoting" (evaluating) the expression assigned to \verb|Y|. In order to actually find the derivative of $\sin(x)$, the command \verb|'DERIV('Y,X)| (evaluating both \verb|Y| and the result of the derivative) would return \verb|COS(X)|. If the user were to input \verb|'DERIV(Y,X)|, they may be surprised to find that the system would return \verb|0|, as \verb|Y| was not unquoted, therefore the system did not know that it was dependent on \verb|X|. If the user had declared this dependency beforehand, however, then the result would have been the same as with \verb|DERIV(Y,X)|.
 
 This mechanism is symbolic of MATHLAB 68's design philosophy of preventing the system from making assumptions that rob the user of control over the data. The user is expected to prefer one of the two options, either quoting every variable by default or evaluating them. This design choice, as Engelman admits \parencite{engelman1971legacy}, is inferior to the approach of variables always being evaluated unless no value has been assigned to them.
 
@@ -188,3 +188,163 @@ Below is an example of a Macsyma session, taken from Martin's paper \parencite{m
 Martin's paper displays some examples of how Macsyma handles errors and allows the user to correct them, like using Macsyma's command \verb|SUBSTITUTE| to correct a typo in a command. In fact, the above session takes advantage of \verb|ALIAS| to abbreviate the name of the \verb|DERIVATIVE| command into just \verb|D|. This helps illustrate how Macsyma was truly designed with the user in mind, and how it fulfilled its objective of being a system that could interact with the user in a discussion-like manner.
 
 Making the system even more customizable by the user, the \verb|TELLSIMP| facility allowed users to define their own simplification rules to add to the built-in simplification routine \parencite{martin1971macsyma}. This would push Macsyma to potentially be used in some areas and solve some problems it wasn't originally designed to.
+
+Continuing with another one of MATHLAB's main features, Macsyma's different models and algorithms make use of special data types suited for each of them. What Moses \parencite{moses1971algebraic} called "radical" algebraic manipulation---where the user's expressions are transformed to a point where none of the original properties of the expression may be retained aside from its functional value---and its opposite, "conservative" algebraic manipulation, are met with Macsyma's general simplifier, which takes a stance in the middle of these two extremes, while the different modules of the system may delve more into one of these two extremes.
+
+This hybrid approach allows for some manipulations typical of systems with a more radical approach on expressions that appear more conservative, like the ability to process $e^{2x} + 2e^{x} + 1$ as a quadratic polynomial in $e^{x}$ \parencite{martin1971macsyma}. This is a feature that was not present in most computer algebra systems of the time, and it is a testament to Macsyma's flexibility and power. It is achieved by Macsyma's use of two forms of representation for expressions.
+
+The first one is called the "ordinary" form, and is reminiscent of Lisp and of MATHLAB 68's prefix expressions, using Reverse Polish Notation, like \verb|(times 3 (expt x 2))| for $3x^2$.
+
+The second form is called the "canonical rational expression", or CRE, which is used internally and is much faster for manipulation of polynomials and rational functions \parencite{martin1971macsyma}. This form is very reminiscent of MATHLAB 68's approach to representing polynomials as trees. Polynomials are lists of at least three elements, with the first one being the variable, the second one being the degree of the polynomial and the third one onwards being the coefficients of the polynomial. So, $3x^2$ would be represented as \verb|(x 2 3)|, and $6x^2 + 4$ \verb|(x 2 6 0 4)|. Of course, just like MATHLAB allowed, coefficients may also be polynomials, allowing for expressions like \verb|(x 2 (y 1 1) 1 (z 1 7))| to represent $x^2y + 7xz$.
+
+Many of the CRE commands in Macsyma are returning algorithms from MATHLAB, such as \verb|RATSIMP|, although Macsyma's versions are more efficient. However, some of the new commands in Macsyma, like \verb|RAT| or \verb|RATDISREP| are designed specifically to ease the conversions between forms of representation. Others, like \verb|FULLRATSIMP|, are expansions to the original commands. \verb|FULLRATSIMP| performs reductions on the expression until no more are possible \parencite{martin1971macsyma}.
+
+Another interesting case is Macsyma's version of \verb|SOLVE|, which takes advantage of radical manipulations but doesn't return any strange-looking expressions resulting of these manipulations. Instead, it uses Macsyma's routines to expand expressions into polynomials and returns more general expressions \parencite{martin1971macsyma}.
+
+Macsyma displays a more focused approach to algorithms than its predecessor, MATHLAB 68. It is apparant that its mission was to implement basic algorithms in the most efficient way possible \parencite{martin1971macsyma}, and it even went on to show that Lisp was a suitable programming language for computer algebra systems, a sort of flagship for the language in this field.
+
+\section{The democratization of computer algebra}\label{sec:the-democratization-of-computer-algebra}
+
+Up until the 1960s and 1970s, computer algebra systems were mostly experiments in research institutions \parencite{davenport1994computer}. Software was being developed with specific hardware in mind, hardware which was not available to the general public, as the computing requirements for computer algebra were too high \parencite{hearn2005reduce}.
+
+Reduce, a general-purpose, physics-oriented computer algebra system developed by Anthony Hearn, put a focus on portability from the start of its development in 1963 \parencite{hearn2005reduce}. Originally, Hearn intended to write his system in Lisp to accomplish this goal, as the language was available in most machines of the time. However, the Lisp language was evolving into many different dialects, thus making the availability of "Lisp" in a machine not necessarily meaning that the system would run on it. Hearn's approach shifted to writing the system in a uniform subset of Lisp called Standard Lisp, which could be found in most machines either directly or by simple mappings to any other Lisp implementation \parencite{hearn2005reduce}.
+
+In 1981, a portable Standard Lisp compiler was released, which allowed Reduce to be run on any machine that had a Lisp compiler and was compatible with the Standard Lisp protocols \parencite{hearn2005reduce}. This was a major step in luring new users to computer algebra systems. Reduce ended up becoming one of the most widely available systems of the decade \parencite{geddes1992algorithms}.
+
+Many of the techiques used in a modern CAS can be traced back to the researchers at MIT. Macsyma's development kept going forward, keeping its focus on development and optimization of algorithms, making it the most powerful computer algebra system of the time \parencite{geddes1992algorithms}.
+
+David Stoutemyer and Albert Rich, from the University of Hawaii, developed muMATH in the late 1970s, a general-purpose CAS and the first of its kind to be able to run on the IBM family of personal computers \parencite{geddes1992algorithms}. Being available on a small and accessible family of computers, muMATH opened the gates for a widespread use of computer algebra systems in research and in the classroom. It was implemented in the muSIMP programming language, an extension of the muLISP dialect of the Lisp language \parencite{derive-the-roots}.
+
+Studies made in the 1980s and 1990s on the effects of employing computer algebra systems in the classroom, namely muMATH, showed that students who used the system had a better understanding of the material, although they evidenced that students unfamiliar with computers and software had trouble utilizing them \parencite{aspetsberger1984experiments,mayes1992effects}. The moment for computer algebra systems to be used in the classroom simply had not arrived yet, but the advantages were clear.
+
+Despite these efforts, the majority of computer algebra systems had significant computer resource requirements, which prevented widespread use. Advances in computer hardware, however, would soon make these systems more accessible to the general public with the introduction of microprocessor-based workstations, and interest in portable computer algebra systems was reignited in the 1980s \parencite{geddes1992algorithms}.
+
+Microprocessor-based workstations required even more efficiency in the algorithms and memory management of computer algebra systems, which made developers shift to languages like C, which let developers have more control over the memory and the execution of the system \parencite{geddes1992algorithms}.
+
+This is the case of Maple, which was developed at the start by Keith Geddes and Gaston Gonnet at the University of Waterloo. Maple was written in C, with a modular structure, a light, easily-portable, compiled kernel, and a large library of routines (featuring integer and rational arithmetic and polynomial manipulation) written in the homonimous user-level programming language \parencite{geddes1992algorithms}. It was designed to provide user accessibility to computer algebra, inspired by the previous attempts at this of muMATH and in contrast to the large mainframe computers required to run Macsyma. The Maple system was also devised not to be tied to any operating system of programming language. \parencite{char1983design}.
+
+Another focus that Maple had was on the user interface, which was created to be as user-friendly as possible, with a command-line interface that was easy to use and understand \parencite{char1983design}.
+
+Maple featured a set of data structures used to represent programming language statements and types of expressions formed by arithmetic and logical operators, numbers, lists, sets, tables, symbolic functions, equations, ranges, procedures and series. All of these data structures were implemented in the Maple language as dynamic vectors at the machine level. They had a general format with each data structure being composed of a header encoding the length, type, simplification status and garbage collection status of the structure, and other fields containing data. This focus on dynamic vectors made the system very efficient in terms of memory usage and was integral to Maple's compactness \parencite{char1983design}.
+
+Mathematica was another system developed in the 1980s, by Stephen Wolfram, and a major player in the field even today. It was also based on C, and it popularized integrated environments for computer algebra systems, with a notebook-like interface. It supported symbolics, numerics and impressive animated graphical capabilities, both two-dimensional and three-dimensional. Mathematica put on display how a CAS could benefit from the editing features on machines with graphical user-interfaces. \parencite{geddes1992algorithms}.
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{Dini's surface, represented using Mathematica's graphical capabilities.}
+        \label{fig:mathematica-dini}
+      }%
+      {\includegraphics[scale=0.5]{mathematica-dini}}
+\end{figure}  
+
+Mathematica is divided into two parts: the kernel and the front end. The kernel is the core of the system, and it is responsible for the evaluation of expressions and the execution of commands. The front end is the graphical user interface, and it is responsible for the display of the results of the kernel's computations. The front end also allows the user to input commands and expressions, and it is responsible for the notebook interface, which allows the user to save the results of their computations in a document-like format. The front end also allows the user to edit the results of the computations, and it has a built-in help system that provides information on the system's commands and functions \parencite{wolfram1991mathematica}.
+
+The Mathematica programming language can be used to write programs making use of the symbolic capabilities of the system, and it supports many programming paradigms, namely procedural programming, functional programming and rule-based programming \parencite{wolfram1991mathematica}.
+
+Aside from new systems being developed, some of the systems designed in previous decades were still being developed and evolved. Macsyma, for example, was privatized by the Symbolics, Inc. \parencite{geddes1992algorithms} and kept being developed. DOE Macsyma, the name given to the MIT's version of Macsyma, was distributed by the United States Department of Energy, and eventually got rebranded to Maxima when it was released under the GNU Public License.
+
+Derive, a successor to muMATH developed by Soft Warehouse, while not as powerful as other systems, provided a wide range of applications to 16-bit personal computers, a user-friendly interface two-dimensional input and editing of mathematical expressions, and both two-dimensional and three-dimensional graphics \parencite{geddes1992algorithms,derive-the-roots}.
+
+The first pocket calculators featuring computer algebra capabilities were also released in the 1980s. Hewlett-Packard's HP-28C was the first \parencite{nelson-hp-calculator-first} pocket calculator to feature a computer algebra system. The HP-28 series of calculators featured algebraic manipulation, symbolic integration, Taylor series construction and symbolic solutions to algebraic equations \parencite{hp-28s-manual}. Texas Instruments followed suit in 1995 with the release of the TI-92, which featured a CAS based on Derive \parencite{ti-92-guidebook}.
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{A screenshot of the TI-92's computer algebra system.}
+        \label{fig:ti-92}
+      }%
+      {\includegraphics[scale=0.5]{ti-92}}
+\end{figure}  
+
+Democratization of computer algebra, of course, came hand in hand with their commercialization. Users would now have to pay for the software, which had both advantages and disadvantages. The biggest disadvantage was users not being informed enough to discern what "state of the art" computer algebra systems looked like, and were thus subjected to unrealistic claims on the matter. However, commercialization made the systems more user-friendly, more efficient, and widened their range of functionalities \parencite{geddes1992algorithms}.
+
+\section{Current computer algebra systems}\label{sec:current-computer-algebra-systems}
+
+Currently, computer algebra systems are more powerful and user-friendly than ever. They are used in a wide range of applications, from research to education, and they are available on a wide range of platforms, from personal computers to smartphones.
+
+\subsection{Symbolic computation libraries}\label{subsec:symbolic-computation-libraries}
+
+In his paper on the history of computer algebra \parencite{davenport1994computer}, Davenport already saw a trend towards computer algebra libraries. Today, this trend is more evident than ever, as many programming languages have libraries for symbolic computation.
+
+\subsubsection{SymPy}\label{subsubsec:sympy}
+
+One of the most popular symbolic computation libraries is SymPy, a Python library for symbolic mathematics. Debuting in 2005, and with over 500 contributors to the project, SymPy is open-source and free, and it is used by many people around the world for research, education, and industry. SymPy is written entirely in Python, and it is lightweight and easy to use. It features a wide range of mathematical functions, including algebraic manipulation, calculus, discrete mathematics, and more. SymPy is also extensible, and it can be used to build more complex mathematical software \parencite{meurer2017sympy}.
+
+Among SymPy's many uses are calculus, category theory, combinatorics, geometry, matrices, polynomial manipulation, series, simplifications, solvers, statistics, and tensors. SymPy also has a code generation module that can be used to generate code in various languages, including C, Fortran, Julia and Python, among others \parencite{meurer2017sympy}.
+
+SymPy's ease of use and availability at a general-purpose programming language like Python has made it key to many other projects, like the GNU Octave Symbolic Package or the Mathics and SageMath computer algebra systems \parencite{meurer2017sympy}.
+
+\subsubsection{Symbolics.jl}\label{subsubsec:symbolics-jl}
+
+Another, even more recent, popular symbolic computation library is Julia's Symbolics.jl. Julia is a high-level, high-performance programming language for technical and scientific computing. Symbolics.jl is designed to be fast, easy to use, and extensible, and it is used for a wide range of applications, including algebraic manipulation, calculus, differential equations, and more. Symbolics.jl is written entirely in Julia, and it is lightweight and easy to use. It features a wide range of mathematical features, such as symbolic arithmetic, symbolic polynomials, trigonometric functions, differentiation, symbolic linear algebra, automatic conversion of Julia code to symbolic code, function generation from symbolic expressions, support for non-standard algebras, and others. Symbolics.jl is also extensible, and it can be used to build more complex mathematical software \parencite{gowda2021high}. 
+
+One of Symbolics.jl's greatest strengths is multiple dispatch, a notable feature of Julia. Multiple dispatch allows the definition of functions that adapt their behavior based on the types of their arguments, making Symbolics.jl highly flexible and powerful. This capability facilitates handling a wide range of mathematical problems effectively \parencite{gowda2021high}. The example that the official Julia documentation uses is quite illustrative: adding two integers is fundamentally different from adding two floating-point numbers, and both differ from adding an integer to a floating-point number. While these operations are implemented differently, they all represent the general concept of "addition". In Julia, these varied behaviors are encapsulated within a single object: the \verb|+| function \parencite{bezanson2017julia}.
+
+\subsection{Communication among technologies}\label{subsec:communication-among-technologies}
+
+Another one of the trends that Davenport foresaw in his paper was the communication among different technologies \parencite{davenport1994computer}. He argued that users of computer algebra systems would get used to one of the options available, even when other systems may be more efficient for a specific task. His idea was that a general-purpose system may need to call a system more specialized and more optimized in the area that the user is working on, or perhaps a specialized system would want to call a general-purpose system for tasks that were more efficiently implemented there, like polynomial manipulation.
+
+SageMath is a computer algebra system that follows this idea. It is a free, open-source, general-purpose computer algebra system that is built on top of many other open-source mathematical software systems, including SymPy, Maxima, Singular, GAP, PARI/GP, FLINT, R, and many others.  It features a wide range of mathematical functions, including algebraic manipulation, calculus, discrete mathematics, and more. Interaction between all of these systems is made possible by a common Python-like language \parencite{stein2005sage,sagemath}.
+
+\subsection{Computer vision}\label{subsec:computer-vision}
+
+From the early days of computer algebra, a common challenge was designing a way for users to input mathematical expressions into the system in a way that was not too foreign to them. This is a challenge that has been tackled in many ways, and currently, with advances in computer vision, text recognition engines, and artificial intelligence, some computer algebra systems are able to recognize handwritten mathematical expressions and convert them into a format that the system can understand.
+
+In 2014, Croatian startup MicroBlink released Photomath, a mobile application that uses computer vision to recognize handwritten mathematical problems and then solves them automatically \parencite{microblink-photomath}. The application uses the camera of a smartphone to capture the expression, processes the image to recognize the characters and symbols, and finally makes use a CAS to solve the problem and display the result. It is also a great tool for teaching students, as it provides clear, step-by-step instructions on how to solve the problem.
+
+As of 2021, Photomath amassed over 220 million downloads \parencite{photomath-downloads}. Long gone are the days when computer algebra systems were a niche tool for researchers and mathematicians and muMATH's complexity confused students. Photomath is a testament to how far computer algebra systems have come, and how they are now accessible to anyone with a smartphone.
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{Scanning a mathematical expression with Photomath.}
+        \label{fig:photomath}
+      }%
+      {\includegraphics[scale=0.5]{photomath}}
+\end{figure}
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{Photomath interface showing the steps to solve a mathematical equation.}
+        \label{fig:photomath-steps}
+      }%
+      {\includegraphics[scale=0.5]{photomath-steps}}
+\end{figure}
+
+\subsection{Answer engines and natural language processing}\label{subsec:answer-engines-and-natural-language-processing}
+
+Possibly the most widely used tool for symbolic computation today is Wolfram Alpha. Released in 2009, Wolfram Alpha is a computational knowledge engine (or, more generally, an answer engine) that uses natural language processing to understand and answer questions posed by users \parencite{wolfram-alpha-about}.
+
+Answer engines are not computer algebra systems, but they are systems that may employ a CAS in order to answer questions. Wolfram Alpha uses its older sister Mathematica to perform symbolic computations.
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{Wolfram Alpha's interface showing its natural language input format and its symbolic computation and plotting capabilities, powered by Wolfram Mathematica.}
+        \label{fig:wolfram-alpha}
+      }%
+      {\includegraphics[scale=0.5]{wolfram-alpha}}
+\end{figure}
+
+Symbolab is another answer engine that uses a CAS to solve mathematical problems. It is a free, online tool that can solve a wide range of mathematical problems, including algebra, calculus, differential equations, and more. Symbolab has a similar interface to Wolfram Alpha, and uses a combination of natural language processing and symbolic computation to understand and solve problems posed by users step by step. Symbolab even features solutions for "word problems", making use of the advances of recent years in large language models to model elementary logical and mathematical problems \parencite{symbolab}.
+
+\begin{figure}[htb]
+    \ffigbox[\FBwidth]
+      {%
+        \caption{Symbolab's interface solving a word problem, displaying both its natural language processing and symbolic computation capabilities.}
+        \label{fig:symbolab-word-problem}
+      }%
+      {\includegraphics[scale=0.3]{symbolab-word-problem}}
+\end{figure}
+
+\section{Conclusion}\label{sec:conclusion}
+
+Computer algebra systems have come a long way since their inception in the 1960s. From the early experiments in research institutions to the widespread use of answer engines and mobile applications, computer algebra systems have become an essential tool for researchers, educators, and students alike.
+
+The democratization of computer algebra has been a key factor in the development of these systems. Advances in computer hardware, the development of portable computer algebra systems, and the availability of symbolic computation libraries have made computer algebra more accessible than ever. The integration of computer algebra systems with other technologies, such as computer vision and natural language processing, has further expanded their reach and made them more user-friendly.
+
+The future of computer algebra systems is bright. With advances in artificial intelligence, machine learning, and natural language processing, we can expect to see even more powerful and user-friendly systems in the years to come. Future advances in the field may include more sophisticated natural language processing capabilities---perhaps even allowing users to ask questions about mathematical problems---, improved computer vision algorithms, and better integration with other technologies.
+
+These systems will continue to play a key role in research, education, and industry, and will help us solve complex mathematical problems more efficiently than ever before.
