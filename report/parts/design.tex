@@ -1,1 +1,84 @@
 \chapter{Design}\label{chap:design}
+
+The following chapter describes the design of the project and an overview of its features.
+
+\section{Presentation}\label{sec:presentation}
+
+Symbotini is a symbolic calculator program written in Rust. It is designed to be a simple and easy-to-use tool for performing symbolic calculations. It can perform a variety of operations, such as simplifying expressions, solving equations, and operating with polynomials. The program is designed to be user-friendly and intuitive, with a simple command-line interface.
+
+\section{Features}\label{sec:features}
+
+Below is a comprehensive list of the features that Symbotini offers:
+
+\begin{itemize}
+    \item A parsing expression grammar (PEG) parser for parsing mathematical expressions.
+    \item Rust-based implementation of symbolic algebraic manipulation.
+    \item Input based on text files to batch process expressions.
+    \item Recognition of mathematical expressions written in a natural, human-readable format.
+    \item Internal data classes for representing mathematical concepts.
+    \item Automatic simplification of expressions.
+    \item Automatic refactoring and reordering of expressions.
+    \item Error handling for invalid expressions or operations.
+    \item Support for basic arithmetic operations.
+    \item Support for operations with polynomials: addition, subtraction, multiplication, and division.
+    \item Support for custom value assigments to variables.
+    \item Variable substitution in expressions.
+    \item Resolution of linear and quadratic equations by finding the roots.
+        \begin{itemize}
+            \item Support for both real and complex roots.
+        \end{itemize}
+\end{itemize}
+
+\subsection{Parsing expression grammar parser}\label{subsec:peg-parser}
+
+Parsing expression grammars (PEGs) are a type of formal grammar that can be used to describe the syntax of a language. PEGs are similar to context-free grammars (CFGs) but, unlike CFGs and regular expressions, PEGs are not ambiguous \parencite{pest-book,ford2004parsing}.
+
+Pest \parencite{pest-book} is a parser generator for Rust based on PEGs. It allows for the creation of parsers that are easy to read and write. Pest is used in Symbotini to parse mathematical expressions. The parser is able to recognize a wide variety of expressions, including operations, polynomials, and assigments.
+
+Each of those concepts is then represented by a Rust data structure, which is used to determine its behavior and perform the corresponding operations.
+
+\subsection{Rust}\label{subsec:rust}
+
+Rust \parencite{matsakis2014rust} is a systems programming language that is focused on safety, speed, and concurrency. It is designed to be a practical language that is easy to learn and use. Rust the programming language selected for Symbotini.
+
+The motivation behind this choice (besides the language's features and focus on safety, and the fact that Rust is a modern language that is gaining incredible popularity in the software development community \parencite{stack-overflow-survey}) was an interest in developing a project in a language that I had never used before, incentivized by my tutor for this thesis.
+
+\subsection{Input}\label{subsec:input}
+
+Symbotini accepts input in the form of plain text files. Each line in the file is treated as a separate expression to be evaluated. The program reads the file line by line, parsing each expression and performing the corresponding operations.
+
+The input file can contain a mix of expressions, assignments, and operations. The program will evaluate each line in order and output the result of the operation.
+
+This input method allows for batch processing of expressions, making it easy to evaluate multiple expressions at once.
+
+\subsection{Mathematical expressions}\label{subsec:mathematical-expressions}
+
+Symbotini is able to recognize a wide variety of mathematical expressions thanks to its PEG parser. The format in which expressions are written is similar to the way they would be written on paper, or how they would be input in similar mathematical software.
+
+The parser is able to recognize operations such as addition, subtraction, multiplication, and division, as well as more complex expressions involving polynomials and variables.
+
+\subsection{Data classes}\label{subsec:data-classes}
+
+The source code of Symbotini is organized around a set of data classes that represent mathematical concepts. These classes are used to store and manipulate expressions, polynomials, and other mathematical objects. Each class has methods specific to it for performing operations on the data it represents.
+
+\subsection{Simplification and refactoring}\label{subsec:simplification-refactoring}
+
+Symbotini is able to automatically simplify and refactor expressions input by the user, returning the most compact and readable form of the expression. This is done by applying a series of rules and transformations to the expression, such as combining like terms, factoring out common factors, and reordering terms. For example, the expression \verb|2x + 3x| would be simplified to \verb|5x|.
+
+\subsection{Error handling}\label{subsec:error-handling}
+
+If the user inputs an invalid expression or operation, Symbotini will return an error message explaining the issue. This helps the user identify and correct mistakes in their input. As an example, if the user tries to divide by zero, the program will return an error message indicating that division by zero is not allowed.
+
+\subsection{Operations}\label{subsec:arithmetic-operations}
+
+Symbotini supports basic operations such as addition, subtraction, multiplication, and division, for both numbers and/or symbolic expressions. These operations can be performed on numbers, variables, and polynomials. In the grammar of the parser, the operands are separated by the corresponding operator and identified by enclosing them in parentheses.
+
+\subsection{Value assignments to variables}\label{subsec:value-assignments}
+
+The user can assign values to variables in Symbotini. This allows them to define custom values for variables and use them in expressions. For example, one could assign the value \verb|3| to the variable \verb|x| and then use \verb|x| in an expression, such as \verb|2x + 1|, and the program would evaluate the expression as \verb|7|.
+
+\subsection{Equation solving}\label{subsec:equation-solving}
+
+Symbotini features a solver for linear and quadratic equations. When the program is prompted to solve an equation, it will assume the right-hand side of the equation is equal to zero and will find the roots of the equation.
+
+The solver is able to find both real and complex roots of the equation, making use of Symbotini's flexible variable system to implement the imaginary unit $\mathrm{i} = \sqrt{-1}$ as a special variable.
