@@ -6,9 +6,11 @@
 \usepackage{lipsum}  % dummy text
 \usepackage{placeins}  % \FloatBarrier -> prevents figures and tables from passing that point
 \usepackage{microtype}  % improves the spacing between words and letters
+\usepackage{amsmath}  % math tools
+\usepackage{listings, listings-rust}  % code listings
+\renewcommand{\lstlistingname}{Listing}  % change caption name
 
 \usepackage{mymacros}  % report-specific macros
-
 
 % silence ht warnings
 \usepackage{silence}
@@ -61,6 +63,7 @@
   \tableofcontents
   \listoffigures
   \listoftables
+  \lstlistoflistings
 
 
   % THESIS
