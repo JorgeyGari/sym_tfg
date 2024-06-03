@@ -1,1 +1,79 @@
-\chapter{Implementation and Deployment}\label{chap:implementation}
+\chapter{Implementation}\label{chap:implementation}
+
+\section{Design of the grammar}\label{sec:design-of-the-grammar}
+
+Symbotini uses a custom-defined grammar to parse the input file in which the user specifies the desired calculations, expressions and assignments.
+
+This grammar is a parsing expression grammar (PEG). It is defined and designed for the Pest parser generator \parencite{pest-book}, which is a Rust library for defining parsers. The grammar is defined in its own \verb|*.pest| file, which is then used by Pest to generate the parser code.
+
+Symbotini's grammar supports implicit whitespace. This means that the parser automatically skips over whitespace characters in the input file, unless they are explicitly required by the grammar. For instance, inputting \verb|1+2| is equivalent to \verb|1 + 2|, or even \verb|1 +2| or \verb|1+ 2|.
+
+The syntax for Pest parsers allows for two special kinds of rules: silent rules and atomic rules:
+
+\begin{itemize}
+    \item Silent rules, denoted by the underscore (\verb|_|) character, are rules that do not produce pairs or tokens. In this grammar, they are used for grouping other rules together or for the special case of the \verb|WHITESPACE| rule.
+    \item Atomic rules, denoted by the at (\verb|@|) character, are rules preventing implicit whitespace. Additionally, any other rules called within an atomic rule are treated as silent rules.
+\end{itemize}
+
+\begin{verbatim}
+    expr = _{ assign | operation | polynomial | solve }
+    
+    operation = { 
+        "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")"
+        ~ (op ~ "(" ~ polynomial ~ ")")*
+        }
+    op        = _{ add | sub | mul | div }
+    add       =  { "+" }
+    sub       =  { "-" }
+    mul       =  { "*" }
+    div       =  { "/" }
+
+    assign = { var ~ "=" ~ (operation | polynomial) }
+    
+    sign       =  { "+" | "-" }
+    number     =  { ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+    fraction   =  { number ~ "/" ~ number }
+    var        = @{
+        var_name ~ ("^" ~
+        "(" ~ sign? ~ number ~ ("/" ~ number)? ~ ")")? 
+        }
+    var_name   =  { ASCII_ALPHA }
+    term       =  { sign? ~ (number | "(" ~ fraction ~ ")" | var)+ }
+    polynomial =  { term ~ (WHITESPACE* ~ term)* }
+    file       =  { SOI ~ (expr ~ NEWLINE?)* ~ EOI }
+    WHITESPACE = _{ " " }
+
+    solve = { "[" ~ polynomial ~ ("," ~ var_name)? ~ "]" }
+\end{verbatim}
+
+Let us explain the grammar in more detail.
+
+The first rule that will be matched is the \verb|file| rule. It is the entry point of the grammar and matches the entire input file. It consists of a sequence of expressions, each followed by an optional newline character. The \verb|SOI| and \verb|EOI| rules are special rules that match the start and end of the input, respectively.
+
+The \verb|expr| rule is a silent rule that matches any of the following rules: \verb|assign|, \verb|operation|, \verb|polynomial| or \verb|solve|. This rule is used to group the different types of expressions that can be found in the input file, and all the operations the program can perform.
+
+The purpose of the \verb|assign| rule is to match an assignment expression. It consists of a variable (\verb|var|) followed by an equal sign (\verb|=|) token and then either an \verb|operation| or a \verb|polynomial|.
+
+The \verb|operation| rule matches one \verb|polynomial| followed by an operator (\verb|op|) and another \verb|polynomial|, and then optionally more operators and polynomials, making it possible to chain operations.
+
+The \verb|op| rule, short for "operator", is a silent rule that matches any of the following rules: \verb|add|, \verb|sub|, \verb|mul| or \verb|div|. These rules are atomic and match the corresponding operator token.
+
+The \verb|solve| rule matches a polynomial followed by an optional variable name enclosed in square brackets (\verb|[]|). The decision to use square brackets arises from the unambiguous nature of this syntax and PEGs in general, as it is not used elsewhere in the grammar. Using a keyword in the input like \verb|sol| would cause conflict, as the letters in the keyword could be mistaken by the parser for variables in cases like \verb|sol -x + 10|.
+
+The \verb|polynomial| rule matches a sequence of \verb|term|s separated by optional whitespace.
+
+A \verb|term| is defined as an optional \verb|sign| (either a \verb|+| token or a \verb|-| token) followed by a either a sequence of \verb|number|s, \verb|fraction|s (enclosed by parentheses to avoid mathematical ambiguity in cases like \verb|2/3x|, which could otherwise be interpreted as either $\frac{2}{3x}$ or $\frac{2}{3}x$) and variables (at least one of either). The decision to make the \verb|sign| optional is to allow for positive numbers to be written without the \verb|+| sign.
+
+The \verb|var| rule matches a variable name followed by an optional exponentiation denoted by a circumflex accent symbol (\verb|^|). The exponentiation is enclosed in parentheses and consists of an optional \verb|sign|, a \verb|number| (optionally followed by a slash and another \verb|number|, for ratios). Exponentiation is optional in order to allow for variables to be written without an exponent (exponent $1$ is allowed to be implicit). The decision to make the \verb|var| rule atomic is to make sure the variable names are parsed correctly.
+
+A \verb|var_name| (short for "variable name") is a single alphabetical ASCII character. This is a design decision to keep the grammar simple and to avoid conflicts with other rules. The user is restricted to alphabetical ASCII characters in order to allow the program to insert some special variables with non-alphabetical names like is done with the imaginary unit $\mathrm{i}$.
+
+The \verb|number| rule matches a sequence of one or more digits followed by an optional decimal part, if the user wants to input a floating-point number. The decimal part is optional to prevent the user from having to write the decimal part if it is zero.
+
+The \verb|fraction| rule matches a \verb|number| followed by a slash (\verb|/|) token and another \verb|number|. This rule is used to allow the user to input fractions in a more readable way.
+
+The \verb|WHITESPACE| rule is a silent rule that matches a single space character. It is used to allow for implicit whitespace in the input file.
+
+This grammar underwent several iterations and changes during the development of Symbotini. The final version of the grammar was chosen to be simple and easy to understand, while still being able to parse the desired input expressions. Many of the design decisions were made to make the input file as readable and natural as possible.
+
+Using this grammar, Pest generates a parser that can analyze the input file and match each line with a rule. This allows Symbotini to understand the user's input, construct suitable structures and perform the desired calculations.
