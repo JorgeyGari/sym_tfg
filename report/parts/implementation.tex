@@ -62,7 +62,7 @@ The \verb|polynomial| rule matches a sequence of \verb|term|s separated by optio
 
 A \verb|term| is defined as an optional \verb|sign| (either a \verb|+| token or a \verb|-| token) followed by a either a sequence of \verb|number|s, \verb|fraction|s (enclosed by parentheses to avoid mathematical ambiguity in cases like \verb|2/3x|, which could otherwise be interpreted as either $\frac{2}{3x}$ or $\frac{2}{3}x$) and variables (at least one of either). The decision to make the \verb|sign| optional is to allow for positive numbers to be written without the \verb|+| sign.
 
-The \verb|var| rule matches a variable name followed by an optional exponentiation denoted by a circumflex accent symbol (\verb|^|). The exponentiation is enclosed in parentheses and consists of an optional \verb|sign|, a \verb|number| (optionally followed by a slash and another \verb|number|, for ratios). Exponentiation is optional in order to allow for variables to be written without an exponent (exponent $1$ is allowed to be implicit). The decision to make the \verb|var| rule atomic is to make sure the variable names are parsed correctly.
+The \verb|var| rule matches a variable name followed by an optional exponentiation denoted by a caret symbol (\verb|^|). The exponentiation is enclosed in parentheses and consists of an optional \verb|sign|, a \verb|number| (optionally followed by a slash and another \verb|number|, for ratios). Exponentiation is optional in order to allow for variables to be written without an exponent (exponent $1$ is allowed to be implicit). The decision to make the \verb|var| rule atomic is to make sure the variable names are parsed correctly.
 
 A \verb|var_name| (short for "variable name") is a single alphabetical ASCII character. This is a design decision to keep the grammar simple and to avoid conflicts with other rules. The user is restricted to alphabetical ASCII characters in order to allow the program to insert some special variables with non-alphabetical names like is done with the imaginary unit $\mathrm{i}$.
 
@@ -116,7 +116,7 @@ A custom definition of equality for the \verb|Variable| struct was implemented. 
     }    
 \end{lstlisting}
 
-The \verb|Term| struct represents a term in a polynomial expression. It consists of a rational coefficient (a \verb|Rational64|) and a vector of variables (\verb|Vec<Variable>|), defined in the \hyperref[subsec:variable]{custom \texttt{Variable} struct}.
+The \verb|Term| struct represents a term in a polynomial expression. It consists of a rational coefficient (a \verb|Rational64|) and a vector of variables (\verb|Vec<Variable>|), defined in the custom \texttt{Variable} struct.
 
 There are several methods implemented for the \verb|Term| struct:
 
@@ -128,7 +128,7 @@ There are several methods implemented for the \verb|Term| struct:
     \item \verb|pow()| is used to raise the term to a power. This method is selective and only raises the term to a power if the result isn't "uglier" than the original term. For instance, raising $x^2$ to the power of $2$ would result in $x^4$, and raising $25$ to the power of $0.5$ would result in $5$ (both inside a \verb|Polynomial|), but raising $13$ to the power of $0.5$ will just return $13^{\frac{1}{2}}$ in a \verb|Polynomial| struct, rather than a ratio approximating the value of $\sqrt{13}$.
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{minipage}{\linewidth}
         \begin{lstlisting}[caption={The implementation of the \texttt{sort\_vars()} method for the \texttt{Term} struct}, label={lst:term-sort-vars}]
             /// Sorts the variables in the term in ascending order based on their names.
@@ -214,11 +214,11 @@ There are several methods implemented for the \verb|Term| struct:
             }
         }
     \end{lstlisting}
-}
+% }
 
 In addition to these methods, the \verb|Term| struct has a custom implementation of equality. Two terms are considered equal if their coefficients are equal and their variable vectors, after being sorted, are equal. This is used to compare terms in the polynomial simplification process.
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of \texttt{PartialEq} for the \texttt{Term} struct}, label={lst:term-eq}]
         impl PartialEq for Term {
             fn eq(&self, other: &Self) -> bool {
@@ -233,11 +233,11 @@ In addition to these methods, the \verb|Term| struct has a custom implementation
             }
         }
     \end{lstlisting}
-}
+% }
 
 Multiplication and division of terms are also custom implementations in the \verb|Term| struct. For multiplication, the method multiplies the coefficients and concatenates the variable vectors. For division, the method upgrades both \verb|Term|s into \verb|Polynomial|s and divides them. The result is a \verb|Polynomial| with a single \verb|Term|: the quotient.
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the multiplication operation for the \texttt{Term} struct}, label={lst:term-mul}]
         impl Mul for Term {
             type Output = Term;
@@ -300,7 +300,7 @@ Multiplication and division of terms are also custom implementations in the \ver
             }
         }
     \end{lstlisting}
-}
+% }
 
 \subsection{Polynomial}\label{subsec:polynomial}
 
@@ -317,13 +317,13 @@ The \verb|Polynomial| struct represents a polynomial expression. It consists of 
 The \verb|Polynomial| struct has several methods implemented:
 
 \begin{itemize}
-    \item \verb|degree()| is used to find the degree of the polynomial. It iterates over the terms in the polynomial and returns the term with the highest degree, using the \verb|max_degree()| method from the \hyperref[lst:term-max-degree]{\texttt{Term} struct}.
-    \item \verb|leading_term()| is used to find the leading term of the polynomial. It iterates over the terms in the polynomial and returns the term with the highest degree according to the \verb|max_degree()| method from the \hyperref[lst:term-max-degree]{\texttt{Term} struct}.
+    \item \verb|degree()| is used to find the degree of the polynomial. It iterates over the terms in the polynomial and returns the term with the highest degree, using the \verb|max_degree()| method from the \texttt{Term} struct.
+    \item \verb|leading_term()| is used to find the leading term of the polynomial. It iterates over the terms in the polynomial and returns the term with the highest degree according to the \verb|max_degree()| method from the \texttt{Term} struct.
     \item \verb|evaluate()| is used to evaluate the polynomial given a vector of tuples containing variable names and their values. It iterates over the terms in the polynomial and evaluates each term, substituting the variable values into the term when applicable.
     \item \verb|sort_terms()| is used to sort the terms in the polynomial by the degree of their leading variable and then by alphabetical order. It is used to simplify the process of comparing polynomials and to convert the polynomial to what is considered its canonical form.
     \item \verb|as_string()| is used to convert the polynomial to a string like \verb|2x^(2) + 3y + 4| for improved readability when printing. It makes several decisions to make the output more readable, like omitting the coefficient if it is $1$ or $-1$ and specifying the degree if it is different from $1$.
     \item \verb|add_like_terms()| is used to add the terms with the same variables in the polynomial. It iterates over the terms in the polynomial and combines the terms adding up their coefficients if they have the same vector of variables once it has been sorted.
-    \item \verb|simplify()| is the general simplification method for a polynomial. It first checks if it can get rid of the polynomial's exponent (\verb|degree|) either using the \verb|pow()| method from the \hyperref[lst:term-pow]{\texttt{Term} struct} or multiplying the polynomial by itself as many times as \verb|degree| specifies. Then it sorts each term's variables, factors them and adds like terms. Finally, it removes terms with a coefficient of $0$ and, if the polynomial is empty after this (meaning the expression was equal to $0$), it adds a null term.
+    \item \verb|simplify()| is the general simplification method for a polynomial. It first checks if it can get rid of the polynomial's exponent (\verb|degree|) either using the \verb|pow()| method from the \texttt{Term} struct or multiplying the polynomial by itself as many times as \verb|degree| specifies. Then it sorts each term's variables, factors them and adds like terms. Finally, it removes terms with a coefficient of $0$ and, if the polynomial is empty after this (meaning the expression was equal to $0$), it adds a null term.
     \item \verb|make_integer()| is a utility method for \verb|factor()|ing polynomials. It finds the smallest scalar such that all of the polynomial's terms have integer coefficients and performs the operation. It works by finding the least common multiple of the denominators of the coefficients of the terms and multiplying all the coefficients by this scalar. 
     \item \verb|factor()| tries to find the greatest common divisor term that can be factored out from the polynomial. It computes the greatest common divisor of the terms's coefficients iterating over them. Each of the variable names of the first term is compared with the variable names of the other terms to filter the collection until only common variables among all of the terms remain. If there is a common variable, then the lowest degree that variable is raised to in the polynomial is found. A term is constructed based on the results of this procedure and is factored out of the polynomial. This whole process is aided by the \verb|make_integer()| method to make calculations easier, a transformation which is undone at the end.
     \item \verb|first_var()| returns the name of the first variable in the polynomial.
@@ -335,7 +335,7 @@ The \verb|Polynomial| struct has several methods implemented:
     \end{itemize}
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the \texttt{degree()} method for the \texttt{Polynomial} struct}, label={lst:polynomial-degree}]
         /// Return the degree of the polynomial.
         pub fn degree(&self) -> Rational64 {
@@ -832,11 +832,11 @@ The \verb|Polynomial| struct has several methods implemented:
             return result;
         }
     \end{lstlisting}
-}
+% }
 
 The \verb|Polynomial| struct also has a custom implementation of equality. Two polynomials are considered equal if, once simplified, their vector of terms are equal.
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of \texttt{PartialEq} for the \texttt{Polynomial} struct}, label={lst:polynomial-eq}]
     impl PartialEq for Polynomial {
         fn eq(&self, other: &Self) -> bool {
@@ -847,7 +847,8 @@ The \verb|Polynomial| struct also has a custom implementation of equality. Two p
             self_copy.terms == other_copy.terms
         }
     }
-}
+    \end{lstlisting}
+% }
 
 Operations for \verb|Polynomial|s are also defined as custom functions:
 
@@ -881,7 +882,7 @@ Operations for \verb|Polynomial|s are also defined as custom functions:
     \end{enumerate}
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the addition operation for the \texttt{Polynomial} struct}, label={lst:polynomial-add}]
         impl Add for Polynomial {
             type Output = Self;
@@ -1013,7 +1014,7 @@ Operations for \verb|Polynomial|s are also defined as custom functions:
             }
         }
     \end{lstlisting}        
-}
+% }
 
 \subsection{PolyRatio}\label{subsec:polyratio}
 
@@ -1042,7 +1043,7 @@ The \verb|PolyRatio| struct has several methods implemented:
 
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the \texttt{simplify()} method for the \texttt{PolyRatio} struct}, label={lst:polyratio-simplify}]
         pub fn simplify(&mut self) {
             self.numerator.simplify();
@@ -1224,7 +1225,7 @@ The \verb|PolyRatio| struct has several methods implemented:
             self.denominator.evaluate(values);
         }
     \end{lstlisting}
-}
+% }
 
 The four elementary arithmetic operations are defined for \verb|PolyRatio| in the following way:
 \begin{itemize}
@@ -1234,7 +1235,7 @@ The four elementary arithmetic operations are defined for \verb|PolyRatio| in th
     \item Division is implemented by multiplying the numerator by the denominator of the divisor and the denominator by the numerator of the divisor (cross-multiplication), then simplifying the result. 
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the addition operation for the \texttt{PolyRatio} struct}, label={lst:polyratio-add}]
         impl Add for PolyRatio {
             type Output = Self;
@@ -1296,7 +1297,7 @@ The four elementary arithmetic operations are defined for \verb|PolyRatio| in th
             }
         }
     \end{lstlisting}
-}
+% }
 
 A set of compatibility functions are also implemented for \verb|PolyRatio| to make it easier to work with \verb|Polynomial|s:
 
@@ -1305,7 +1306,7 @@ A set of compatibility functions are also implemented for \verb|PolyRatio| to ma
     \item The four elementary arithmetic operations are implemented between \verb|Polynomial| and \verb|PolyRatio|. These operations are implemented by upgrading the \verb|Polynomial| using \verb|from()| and performing the operation as defined for \verb|PolyRatio|. These are actually methods of the \verb|Polynomial| struct.
 \end{itemize}
 
-\multilinecomment{
+% \multilinecomment{
     \begin{lstlisting}[caption={The implementation of the \texttt{from()} function for the \texttt{PolyRatio} struct}, label={lst:polyratio-from}]
         impl From<Polynomial> for PolyRatio {
             fn from(p: Polynomial) -> Self {
@@ -1366,4 +1367,249 @@ A set of compatibility functions are also implemented for \verb|PolyRatio| to ma
             }
         }
     \end{lstlisting}
+% }
+
+\section{Main program}\label{sec:main-program}
+
+The main program is responsible for parsing, evaluating and performing operations on the symbolic expressions expressed by the custom syntax defined in the grammar. Using the Pest parser, the program reads the input file and performs the operations.
+
+\subsection{Helper functions}\label{subsec:helper-functions}
+
+The main program has several helper functions that are used to parse the input file:
+
+\begin{itemize}
+    \item The \verb|variable_from_string()| function converts a string (e.g.: \verb|x^(2)|) to a \verb|Variable| struct. It splits the string by the caret symbol (\verb|^|) if present, then converts the first part to a string and the second part (which can be a ratio, a floating-point number or an integer) to a \verb|Rational64|, and returns a \verb|Variable| struct.
+    \item The \verb|parse_polynomial()| function parses a polynomial from the result of matching the \verb|polynomial| rule in the Pest parser (e.g.: \verb|x^(2) + 3y - 1|). It iterates through the parts of the parsed expression, identifying terms and factors within terms, according to the inner rules of the definition of a polynomial according to the grammar. The terms are accumulated and used to construct a \verb|Polynomial| struct.
+    \item The \verb|parse_assignment()| function parses an assignment from the result of matching the \verb|assignment| rule in the Pest parser (e.g.: \verb|x = 2|). It extracts the variable name and the value, and stores them in a tuple, later to be pushed to the vector holding the variable-value tuples.
+    \item The \verb|parse_operation()| function parses an operation from the result of matching the \verb|operation| rule in the Pest parser (e.g.: \verb|(4x) * (y + 6) / (2)|) into a \verb|PolyRatio| struct. It parses the first polynomial in the operation sequence, and then iterates through the rest of the operation sequence, parsing the next polynomial, matching the operation with its corresponding rule and performing the calculation using the previous result.
+\end{itemize}
+
+% \multilinecomment{
+    \begin{lstlisting}[caption={The implementation of the \texttt{variable\_from\_string()} function}, label={lst:variable-from-string}]
+        fn variable_from_string(var: &str) -> polynomial::Variable {
+            let mut iter = var.split('^');
+            let name = iter.next().unwrap().to_string();
+            let degree = iter
+                .next()
+                .map(|d| {
+                    let clean = d.replace("(", "").replace(")", "");
+                    if d.contains('/') {
+                        let parts: Vec<&str> = clean.split('/').collect();
+                        let numerator = parts[0].trim().parse::<i64>().unwrap_or(1);
+                        let denominator = parts[1].trim().parse::<i64>().unwrap_or(1);
+                        Rational64::new(numerator, denominator)
+                    } else if d.contains('.') {
+                        let parts: Vec<&str> = clean.split('.').collect();
+                        let numerator = clean.replace(".", "").trim().parse::<i64>().unwrap_or(1);
+                        let denominator = 10_i64.pow(parts[1].len() as u32);
+                        Rational64::new(numerator, denominator)
+                    } else {
+                        clean.trim().parse::<i64>().unwrap_or(1).into()
+                    }
+                })
+                .unwrap_or(1.into());
+            polynomial::Variable { name, degree }
+        }
+    \end{lstlisting}
+    
+    \begin{lstlisting}[caption={The implementation of the \texttt{parse\_polynomial()} function}, label={lst:parse-polynomial}]
+        fn parse_polynomial(expression: Pairs<Rule>) -> polynomial::Polynomial {
+            let mut p = polynomial::Polynomial {
+                terms: Vec::new(),
+                degree: 1.into(),
+            };
+            for part in expression {
+                match part.as_rule() {
+                    Rule::term => {
+                        let mut term = polynomial::Term {
+                            coefficient: Rational64::new(1, 1),
+                            variables: Vec::new(),
+                        };
+                        for factor in part.into_inner() {
+                            match factor.as_rule() {
+                                Rule::sign => {
+                                    if factor.as_str() == "-" {
+                                        term.coefficient *= -1;
+                                    }
+                                }
+                                Rule::number => {
+                                    term.coefficient *=
+                                        factor.as_str().trim().parse::<Rational64>().unwrap();
+                                }
+                                Rule::fraction => {
+                                    let mut iter = factor.into_inner();
+                                    let numerator =
+                                        iter.next().unwrap().as_str().trim().parse::<i64>().unwrap();
+                                    let denominator =
+                                        iter.next().unwrap().as_str().trim().parse::<i64>().unwrap();
+                                    term.coefficient *= Rational64::new(numerator, denominator);
+                                }
+                                Rule::var => {
+                                    let variable = variable_from_string(factor.as_str());
+                                    term.variables.push(variable);
+                                }
+                                Rule::EOI => (),
+                                _ => unreachable!(),
+                            }
+                        }
+                        p.terms.push(term);
+                    }
+                    Rule::EOI => (),
+                    _ => unreachable!(),
+                }
+            }
+            p
+        }
+    \end{lstlisting}
+    
+    \begin{lstlisting}[caption={The implementation of the \texttt{parse\_assignment()} function}, label={lst:parse-assignment}]
+        fn parse_assignment(assignment: Pairs<Rule>) -> (String, Rational64) {
+            // Only assigning Rational64 values?
+            let mut iter = assignment;
+            let var_name = iter.next().unwrap().as_str().to_string();
+            let var_value = iter
+                .next()
+                .unwrap()
+                .as_str()
+                .trim()
+                .parse::<Rational64>()
+                .unwrap();
+            (var_name, var_value)
+        }
+    \end{lstlisting}
+    
+    \begin{lstlisting}[caption={The implementation of the \texttt{parse\_operation()} function}, label={lst:parse-operation}]
+        fn parse_operation(operation: Pairs<Rule>) -> polynomial::PolyRatio {
+            let mut iter = operation;
+            let first_poly = parse_polynomial(iter.next().unwrap().into_inner());
+            let mut result = PolyRatio::from(first_poly);
+        
+            while let Some(op) = iter.next() {
+                let next_poly = parse_polynomial(iter.next().unwrap().into_inner());
+                match op.as_rule() {
+                    Rule::add => result = result + next_poly,
+                    Rule::sub => result = result - next_poly,
+                    Rule::mul => result = result * next_poly,
+                    Rule::div => result = result / next_poly,
+                    _ => unreachable!(),
+                }
+            }
+            result
+        }        
+    \end{lstlisting}
+% }
+
+\subsection{Main function}\label{subsec:main-function}
+
+The main function orchestrates the overall flow of the program by reading input, parsing it, and performing various operations based on the parsed data.
+
+First, it reads the input file into a string. If the file cannot be read, the programm will panic and terminate with an error message indicating the issue.
+
+If the file is read successfully, the program will parse the input using the Pest parser that was generated based on the custom grammar. If the input cannot be parsed, the program will panic with an error message indicating the issue.
+
+After the two previous steps have been successfuly executed, we can initialize storage for the vector \verb|var_values|, where we will store the variable-value tuples with all the custom definition the user inputs.
+
+\begin{lstlisting}[caption={Reading and parsing user input, and defining storage for custom variable values}, label={lst:reading-parsing-input}]
+    let unparsed_file = fs::read_to_string("input.txt").unwrap();
+
+    let file = PolyParser::parse(Rule::file, &unparsed_file)
+    .expect("unsuccessful parse")
+    .next()
+    .unwrap();
+
+    let mut var_values: Vec<(String, Rational64)> = Vec::new();
+\end{lstlisting}
+
+Now we can start parsing each of the lines in the input file. When a line is read, it will be skipped if it is empty. If not, the input line will be printed to let the user know what operation is being performed.
+
+After that, each of the lines is matched to one of the rules defined in the grammar as possible \verb|expr|(ession) types. This includes a \verb|polynomial|, an \verb|assignment|, an \verb|operation|, or an equation to \verb|solve|.
+
+Here is ano verview of the behavior when matching each of the rules:
+\begin{itemize}
+    \item \textbf{Assignment}:
+    \begin{itemize}
+        \item Call the \verb|parse_assignment()| function to extract the variable name and value.
+        \item Add the variable-value tuple to the \verb|var_values| vector.
+        \item Print the assignment to the user.
+    \end{itemize}
+    \item \textbf{Polynomial}:
+    \begin{itemize}
+        \item Call the \verb|parse_polynomial()| function to parse the polynomial in the line.
+        \item Evaluate the polynomial using the stored variable values.
+        \item Print the evaluation and simplification of polynomial.
+    \end{itemize}
+    \item \textbf{Operation}:
+    \begin{itemize}
+        \item Call the \verb|parse_operation()| function to parse the operation in the line.
+        \item Evaluate the resulting \verb|PolyRatio| using the stored variable values.
+        \item Print the evaluation and simplification of the result of the operation.
+    \end{itemize}
+    \item \textbf{Solve}:
+    \begin{itemize}
+        \item Call the \verb|parse_polynomial()| function to parse the equation in the line. It is assumed that the right-hand side of the equation is always $0$.
+        \item Identify which variable is being solved for. The user may have specified it after the equation (e.g.: \texttt{[3x - 1, x]}). If not, then the first variable in the equation is assumed to be the one being solved for.
+        \begin{itemize}
+            \item In case no variable is found in the equation, the program will panic and terminate with an error message. 
+        \end{itemize}
+        \item Solve the equation for the variable by calling the \verb|solve()| method of the \verb|Polynomial| struct.
+        \item Print the solution to the user, handling the case where there are multiple solutions.
+    \end{itemize}
+\end{itemize}
+
+An additional rule exists for handling end of input (EOI). Any other unreachable cases that should not occur if the grammar is properly followed in the input file will cause the program to panic and terminate with an error message.
+
+\begin{lstlisting}[caption={Iterating through the lines of the input file}, label={lst:iterating-input}]
+    for line in file.into_inner() {
+    if line.as_str().trim().is_empty() {
+        continue; // Skip empty lines
+    }
+    println!("{}", line.as_str());
+    match line.as_rule() {
+        Rule::assign => {
+            let (var_name, var_value) = parse_assignment(line.into_inner());
+            var_values.push((var_name.clone(), var_value));
+
+            println!("\t{} = {}", var_name, var_value);
+        }
+        Rule::polynomial => {
+            let mut p = parse_polynomial(line.into_inner());
+            p.evaluate(&var_values);
+            println!("\t{}", p.as_string());
+        }
+        Rule::operation => {
+            let mut result = parse_operation(line.into_inner());
+            result.evaluate(&var_values);
+            println!("\t{}", result.as_string());
+        }
+        Rule::solve => {
+            let mut iter = line.into_inner();
+            let mut p = parse_polynomial(iter.next().unwrap().into_inner());
+            p.evaluate(&var_values);
+            let mut variable = p.first_var().unwrap_or("".to_string());
+            if variable.is_empty() {
+                panic!("No variable to solve for");
+            }
+            if let Some(var) = iter.next() {
+                variable = var.as_str().to_string();
+            }
+            let result = p.roots(&variable);
+            for root in result {
+                if root.len() == 1 {
+                    println!("\t{}\t= {}", variable, root[0].as_string());
+                } else if root.len() > 1 {
+                    print!("\t{}\\t= {}", variable, root[0].as_string());
+                    for ratio in &root[1..] {
+                        if ratio.numerator.terms[0].coefficient >= 0.into() {
+                            print!(" + ");
+                        }
+                        print!("{}", ratio.as_string());
+                    }
+                    println!();
+                }
+            }
+        }
+        Rule::EOI => (),
+        _ => unreachable!(),
+    }
 }
+\end{lstlisting}
