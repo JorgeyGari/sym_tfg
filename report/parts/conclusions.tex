@@ -1,1 +1,117 @@
 \chapter{Conclusions and Future Work}\label{chap:conclusions}
+
+In this thesis, a study of computer algebra systems and symbolic computation has been carried out, and a new program has been developed that can perform symbolic calculations and manipulations of mathematical expressions.
+
+Building a CAS that can compete with the likes of Mathematica, Maple, or SymPy is a daunting task out of the scope of this thesis, and the program developed in this project doesn't aim to be a replacement for these powerful tools. Instead, it is intended as a simple, experimental calculator that can be used to perform basic symbolic calculations effortlessly.
+
+\section{Achievements}\label{sec:results}
+
+The project has achieved its main goal of developing a program that can perform symbolic calculations and manipulations of mathematical expressions. The program is able to parse mathematical expressions, simplify them, perform elementary operations on them, evaluate expressions for specific values of the variables, and solve equations by finding the exact roots of linear and quadratic polynomials.
+
+It is a standalone application that can be run from the command line, and it is written in the Rust programming language. The program manages to be user-friendly, with a simple and intuitive interface that allows users to input expressions in a familiar way, and to obtain results in a clear and concise manner.
+
+In terms of how it fares against the systems mentioned in \chapterref{state-of-the-art}, the program developed in this project is quite limited. It can only handle elementary algebraic expressions, and it lacks many of the advanced features and capabilities of the more sophisticated computer algebra systems. However, it is a good starting point for further development, and it can be extended and improved in many ways. The simplification algorithm is comparable to that of MATHLAB 68, and both can handle the same types of expressions: polynomials and rational functions. It is, however, more user-friendly than most of the systems mentioned in \chapterref{state-of-the-art}, as it doesn't require the user to learn a new programming language or syntax to use it. It is also more lightweight and faster than most of the systems mentioned, thanks to advances in programming languages and algorithms, and it can be run on any platform that supports Rust, with no need for special hardware.
+
+\section{Future work}\label{sec:future-work}
+
+The program developed in this project is a simple prototype that can be extended and improved in many ways. The project was planned to be developed in several stages, so the addition of new features and improvements to the existing ones is a natural next step.
+
+Some of these features include the implementation of special functions like trigonometric, exponential, and logarithmic functions, although the current program can already handle some of these functions if the user gets creative with the input. Ideally, the program should be able to recognize these functions and simplify expressions involving them.
+
+Another feature that could be added is the ability to solve equations of higher degree, like cubic or quartic polynomials. Although there exists a general formula for solving cubic equations, this formula is quite complex and is not the usual method for solving these types of equations symbolically in computer algebra systems. Instead, the usual approach is to find a linear factor among the integers and then use polynomial division to reduce the polynomial to a quadratic one \parencite{davenport1994computer}. This is a more general and efficient method that could be implemented in the program.
+
+The program could also be extended to handle more complex mathematical structures like matrices or vectors. This would allow the user to perform operations on these structures, like matrix multiplication, inversion, or determinant calculation. Moreover, matrices can be used to represent systems of linear equations, which could be solved by the program.
+
+The Comprehensive System, the first computer algebra system mentioned in \chapterref{state-of-the-art}, was able to perform symbolic differentiation. Defining a set of rules for symbolic differentiation and combining them with the existing rules for simplification and evaluation could be a valuable addition to the program.
+
+Finally, the program could be improved by adding a graphical user interface (GUI). This would allow users to interact with the program in a more intuitive way, by clicking buttons and selecting options from menus, instead of typing commands in the terminal. Compatibility with mathematical typesetting systems like \LaTeX{} could also be added to make the output more readable and visually appealing.
+
+\section{Example of use}\label{sec:example}
+Below are some examples of the program in action. When executing the program, the user inputs are shown first, and the output is shown tabulated below.
+
+Because of the use of Unicode characters in the output, the representation of the imaginary unit has been replaced by a regular \verb|i|. The program itself outputs the results correctly and uses the double-struck italic small i character (U+2148) to represent the imaginary unit.
+
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[caption={Example of use of the program simplifying expressions.},label={lst:example-simplify}]
+        8x^(2)
+            8x^(2)
+        -4x^(-1)
+            -4x^(-1)
+        a = 8
+            a = 8
+        (a) * (x)
+            8x
+        ax
+            8x
+        (a) * (6x - y)
+            48x-8y
+        6ax - ay
+            48x-8y
+        (8) / (x)
+            (8) / (x)
+        (x) / (8)
+            (x) / (8)
+        (2x) / (a)
+            (2x) / (8)
+        (ax) / (ax)
+            1
+        (2x) / (8)
+            (x) / (4)
+        (x) / (x) + (5)
+            6
+        1
+            1
+        0
+            0
+        x - x
+            0
+        (x) - (x)
+            0
+        (4x - 3) / (9n + m)
+            (4x-3) / (m+9n)
+        (3) / (0)
+            ERROR: Division by zero!
+        (3 - 6y) / (6x + 12z)
+            (-2y+1) / (2x+4z)
+    \end{lstlisting}
+\end{minipage}
+
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[language=sh,caption={Example of use of the program evaluating expressions.}, label={lst:example-evaluate}]
+        [x + y + z]
+            x	= -y-z
+        [x^(2) + x - 3]
+            x	= (-1) / (2) + ((13)^(1/2)) / (2)
+            x	= (-1) / (2) + ((13)^(1/2)) / (-2)
+        [x^(2) + x - 2]
+            x	= 1
+            x	= -2
+        [x^(2) + 2x - 3]
+            x	= 1
+            x	= -3
+        [x^(2) + ax - 3]
+            x	= (-a) / (2) + ((a^(2)+12)^(1/2)) / (2)
+            x	= (-a) / (2) + ((a^(2)+12)^(1/2)) / (-2)
+        [x^(2) + x + 3]
+        (i is the imaginary unit)
+            x	= (-1) / (2) + ((11i^(2))^(1/2)) / (2)
+            x	= (-1) / (2) + ((11i^(2))^(1/2)) / (-2)
+        [x^(2) - 10x + 25]
+            x	= 5
+            x	= 5
+        [x^(2) - 10x + 2b - a + 4]
+            x	= 5 + ((4a-8b+84)^(1/2)) / (2)
+            x	= 5 + ((4a-8b+84)^(1/2)) / (-2)
+        [x^(2) - 4]
+            x	= 2
+            x	= -2
+        [x^(2) - 2x]
+            x	= 2
+            x	= 0
+        [y^(2) - 10x + 2]
+            y	= 0 + ((40x-8)^(1/2)) / (2)
+            y	= 0 + ((40x-8)^(1/2)) / (-2)
+        [y^(2) - 11x + 2 + x, x]
+            x	= (-y^(2)-2) / (-10)
+    \end{lstlisting}
+\end{minipage}

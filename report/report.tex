@@ -1,5 +1,6 @@
+% !TeX program = xelatex
 \documentclass[en]{uc3mthesisIEEE}
-
+\usepackage[utf8]{inputenc} 
 
 \usepackage{import}
 \usepackage{enumitem}  % control item separation -> \begin{itemize}[nosep]
@@ -41,15 +42,15 @@
 
   % EPIGRAPH
   \makeepigraph
-    {Anything not saved will be lost.}  % quote
-    {Nintendo Wii quit screen}  % author
+    {Quote.}  % quote
+    {Author}  % author
     {Placeholder quote}  % source
 
 
   % ABSTRACT
   \begin{abstract}
-    \lipsum[1-3]
-    \keywords{Lorem, ipsum, dolor, sit, amet}
+    Symbolic calculators are a type of software that can perform exact calculations with symbolic expressions, as opposed to numerical approximations. A complete study on the history of this relatively young research field is performed in order to extract conclusions and trends from previous computer algebra systems. The project aims to develop a symbolic calculator from scratch, without relying on external libraries or software, and written in the Rust programming language. The result is a program that can parse mathematical expressions, simplify them, and perform elementary operations like addition, subtraction, multiplication, and division. The program can also evaluate expressions for specific values of the variables, and can solve equations by finding the exact roots of linear and quadratic polynomials. The program is intended as a tool to help perform symbolic calculations in a simple and user-friendly way, and to provide exact solutions to mathematical problems in an easier, faster way than by hand. It is designed with a focus on simplicity and ease of use, and it is intended to be an experimental calculator that can be used to perform basic symbolic calculations effortlessly.
+    \keywords{CAS, symbolic computation, computer algebra, calculator, elementary algebra, Rust}
   \end{abstract}
 
 
@@ -74,7 +75,7 @@
     \includefrom{parts/}{design.tex}
     \includefrom{parts/}{implementation.tex}
     % \includefrom{parts/}{validation.tex}
-    % \includefrom{parts/}{planning.tex}
+    \includefrom{parts/}{planning.tex}
     % \includefrom{parts/}{regulation.tex}
     \includefrom{parts/}{conclusions.tex}
     % \newpage

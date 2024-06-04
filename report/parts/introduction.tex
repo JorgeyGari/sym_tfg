@@ -1,21 +1,53 @@
 \chapter{Introduction}\label{chap:introduction}
 
+The present document describes the work carried out in the context of a Bachelor's Thesis in Applied Mathematics and Computing at Charles III University of Madrid.
+
+The project is focused on the development of a program that can perform symbolic calculations and manipulations of mathematical expressions, akin to similar software like Mathematica, Maple, or SymPy. This program is implemented from scratch, without making use of any previous libraries or software, and is written in the Rust programming language.
+
+The result is a program that can parse mathematical expressions, simplify them, and perform elementary operations like addition, subtraction, multiplication, and division. The program can also evaluate expressions for specific values of the variables, and can solve equations by finding the exact roots of linear and quadratic polynomials.
+
 \section{Motivation}\label{sec:motivation}
 
+Computer algebra, also referred to as symbolic computation, is a relatively young field in research. Since the first instances of this type of software in the 1950s and 1960s, these applications have become increasingly popular and powerful, and are now used in a wide range of fields, from mathematics and physics to engineering and computer science.
 
+The main advantage of computer algebra systems is that they can perform exact calculations with symbolic expressions, as opposed to numerical approximations. These program are free from the limitations of floating-point arithmetic such as round-off errors, and can provide exact solutions to problems that would be quite tedious or even impossible to solve otherwise.
 
-\section{Objectives}\label{sec:objectives}
+Additionally, more than ever, the need for mathematical software that is open-source and free to use is growing, as the STEM fields become more and more reliant on computational tools. Software like the one developed in this project can be used by students, researchers, and professionals alike, and can be easily modified and extended to suit the user's needs. In the case of students (a use case explored in the conclusions to this project), this software can be used as a learning tool to gain a deeper understanding of the mathematical concepts involved, encouraging them to pursue a career in STEM.
 
-\section{Document Structure}\label{sec:structure}
-The document contains the following chapters:
+\section{Goals}\label{sec:objectives}
+
+The aim of this project is to develop a calculator program that can perform symbolic calculations and manipulations of mathematical expressions.
+
+The program should allow users to input mathematical expressions in a natural way for humans, and should be able to parse these expressions.
+
+The calculator should also be able to simplify these expressions and perform basic operations like addition, subtraction, multiplication, and division on them.
+
+It is intended as a tool to help perform symbolic calculations in a simple and user-friendly way, and to provide exact solutions to mathematical problems in an easier, faster way than by hand.
+
+Beside the goals of the project, the main objectives of this thesis are to learn and apply the Rust programming language, to deepen my knowledge of computer algebra and symbolic computation, and to develop the algorithms and structure of a symbolic calculator from scratch, without relying on external libraries or software.
+
+\section{Methodology}\label{sec:methodology}
+
+The methodology followed in this project is based on the principles of software development and computer algebra.
+
+A study on how computer algebra systems work was carried out, focusing on how to represent mathematical concepts in a computer program and how to design grammar rules for parsing mathematical expressions.
+
+During development, each feature was implemented incrementally, starting with the parsing of expressions and the representation of mathematical concepts, and then moving on to the implementation of operations and simplifications, finishing with the resolution of equations.
+
+The grammar underwent several iterations to improve its recognition capabilities and to build more features on top of the ones that had been already implemented at each stage of the process.
+
+With each of these steps, the program was tested and validated to ensure that it was working correctly and that it was able to perform the operations it was designed to do.
+
+\section{Structure}\label{sec:structure}
+This document contains the following chapters:
 \begin{itemize}
-  \item \chapterref{introduction}, .
-  \item \chapterref{state-of-the-art}, .
+  \item In \chapterref{introduction}, the project that this thesis is focused on is presented. The motivation behind the project, its goals, and the methodology used to develop it are explained.
+  \item \chapterref{state-of-the-art} consists of a comprehensive history of the field of computer algebra. The advances in the field, the main software and libraries used, and the current state of the art are discussed, using the most representative examples of each of the eras and trends in computer algebra research. In-depth details of some of the most important computer algebra systems are also provided, and an analysis of the current trends in the field is presented.
   % \item \chapterref{analysis}, .
-  \item \chapterref{design}, .
-  \item \chapterref{implementation}, .
+  \item Then, in \chapterref{design}, a high-level overview of the project is given. The design of the program, its features, and the technologies used are described.
+  \item \chapterref{implementation}, delves deeper into the project with an in-depth technical description of how the resulting program works. It includes explanations of the algorithms used, the data structures, and the implementation details of the software.
   % \item \chapterref{validation}, .
-  % \item \chapterref{planning}, .
+  \item In \chapterref{planning}, an analysis of the cost of the project is performed, detailing the human resources and equipment used, and the total cost of the project is calculated. The socio-economic impact of the project is also discussed.
   % \item \chapterref{regulation},.
-  \item \chapterref{conclusions}, .
+  \item Finally, in \chapterref{conclusions}, the main achievements of the project are summarized, and the future work that could be done to improve the program is discussed. An example of the program in action is also provided.
 \end{itemize}

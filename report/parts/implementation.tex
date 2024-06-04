@@ -331,7 +331,7 @@ The \verb|Polynomial| struct has several methods implemented:
     \item \verb|roots()| defines the algorithm for finding the roots of a polynomial. It is composed of two parts: one for linear equations and one for quadratic equations.
     \begin{itemize}
         \item For a linear equation of the form $ax + b = 0$, the function finds the coefficient $a$ (dividing the degree-$1$ term by the variable $x$) and identifies the remaining of the polynomial as $b$. After that it returns the root $-b/a$.
-        \item For a quadratic equation of the form $ax^2 + bx + c = 0$, the roots are found using the quadratic formula, $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The coefficients, $a$, $b$ and $c$, are found analogously to the linear case, and the discriminant is calculated as $\Delta = b^2 - 4ac$. If $\Delta < 0$, the function must handle complex roots. This is done by multiplying $\Delta$ by $-1$ and by the square of the imaginary unit $\mathrm{i}$, represented as the special \verb|Variable| struct with unicode character \verb|U+2148 (DOUBLE-STRUCK ITALIC SMALL I)| as its \verb|name| and with \verb|degree| $2$, obtaining an equivalent expression to the original discriminant. The square root of this expression is then calculated, and the roots are found as $x = \frac{-b \pm \sqrt{\Delta}}{2a}$. These are returned as a vector of \verb|Term|s because of the special way complex roots are displayed to the user in the main program.  % I can't get the unicode character to display.
+        \item For a quadratic equation of the form $ax^2 + bx + c = 0$, the roots are found using the quadratic formula, $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$. The coefficients, $a$, $b$ and $c$, are found analogously to the linear case, and the discriminant is calculated as $\Delta = b^2 - 4ac$. If $\Delta < 0$, the function must handle complex roots. This is done by multiplying $\Delta$ by $-1$ and by the square of the imaginary unit $\mathrm{i}$, represented as the special \verb|Variable| struct with unicode character U+2148 (DOUBLE-STRUCK ITALIC SMALL I) as its \verb|name| and with \verb|degree| $2$, obtaining an equivalent expression to the original discriminant. The square root of this expression is then calculated, and the roots are found as $x = \frac{-b \pm \sqrt{\Delta}}{2a}$. These are returned as a vector of \verb|Term|s because of the special way complex roots are displayed to the user in the main program.  % I can't get the unicode character to display.
     \end{itemize}
 \end{itemize}
 
@@ -1001,11 +1001,9 @@ Operations for \verb|Polynomial|s are also defined as custom functions:
                     && remainder.degree() >= divisor.degree()
                 {
                     let t = remainder.leading_term() / divisor.leading_term();
-                    remainder._print();
                     quotient = quotient + t.clone();
                     remainder = remainder - (divisor.clone() * t.clone());
                     remainder.simplify();
-                    //remainder._print();
                 }
         
                 quotient.simplify();
@@ -1126,8 +1124,6 @@ The \verb|PolyRatio| struct has several methods implemented:
                 if t1.variables[0].name == t2.variables[0].name {
                     var_name = t1.variables[0].name.clone();
                     min_degree = t1.variables[0].degree.min(t2.variables[0].degree);
-                    // println!("Var name: {}", var_name);
-                    // println!("Min degree: {}", min_degree);
                 }
             }
     
