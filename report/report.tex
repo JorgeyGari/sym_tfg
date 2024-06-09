@@ -10,6 +10,10 @@
 \usepackage{amsmath}  % math tools
 \usepackage{listings, listings-rust}  % code listings
 \renewcommand{\lstlistingname}{Listing}  % change caption name
+\usepackage{appendix}  % appendices
+\renewcommand{\appendixname}{Appendix}
+\renewcommand{\appendixpagename}{Appendices}
+\renewcommand{\appendixtocname}{Appendices}
 
 \usepackage{mymacros}  % report-specific macros
 
@@ -80,6 +84,9 @@
     \includefrom{parts/}{conclusions.tex}
     % \newpage
     % \import{parts/}{example.tex}
+    \begin{appendices}
+      \includefrom{parts/}{appendix_a.tex}
+    \end{appendices}
   \end{thesis}
 
   % BIBLIOGRAPHY
