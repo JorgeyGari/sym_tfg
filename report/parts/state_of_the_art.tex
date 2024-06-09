@@ -64,11 +64,12 @@ The addition of two expressions is simply the result of concatenating them with 
 
 As for editing mathematical expressions, MATHLAB 68 had the top-level function \verb|TERM|, a substitute for a real editor that never came to be \parencite{engelman1971legacy}. This function works as an iterator, as \verb|'TERM(n,expr)|, where \verb|n| is (or evaluates to) a positive integer, returns the \verb|n|$^\text{th}$ term of the expression \verb|expr|. For example, if \verb|expr| is a sum, then the value would be the \verb|n|$^\text{th}$ summand, and if \verb|expr| is an equation, then the user could access the left-hand side by using \verb|'TERM(1,expr)| and the right-hand side by using \verb|'TERM(2,expr)|. The usage of this function is also allowed in an iterative fashion. This behavior is reminiscent to that of indexing and iterators in languages of the object-oriented programming paradigm, or to Lisp's own \verb|NTH| function, which returns a pointer to the specified component of the input list \parencite{touretzky2013common}.
 
-User-defined functions in MATHLAB 68 were defined as macros, working as a substitution schema in most cases. When substitution is turned on, this can be quite powerful, as the user could define a function that is a substitution for a more complex expression, and then use this function in place of the expression. Additionally, with simplification turned on, all simplifications possible would be performed on the result of the function \parencite{engelman1971legacy}. Similarly, user-defined programs were defined as a collection of functions. Here is an example, taken from Engelman's paper, of a program that calculates the Runge-Kutta expansion for the solution of a differential equation $y' = f(x,y)$:
+User-defined functions in MATHLAB 68 were defined as macros, working as a substitution schema in most cases. When substitution is turned on, this can be quite powerful, as the user could define a function that is a substitution for a more complex expression, and then use this function in place of the expression. Additionally, with simplification turned on, all simplifications possible would be performed on the result of the function \parencite{engelman1971legacy}. Similarly, user-defined programs were defined as a collection of functions. Below is an example, taken from Engelman's article, of a program that computes the Runge-Kutta expansion for the solution of a differential equation $y' = f(x,y)$:
 
-\begin{verbatim}
+\begin{minipage}{\linewidth}
+  \begin{lstlisting}[caption={Example of a user-defined program in MATHLAB 68.},label={lst:example-mathlab-68-program},numbers=none]
     PROG5(X1,X2,X3,X4,X5):X5$
-
+  
     RUNGE1(X0,Y0):"('PROG5(
     (K1:'H*'F(X0,Y0)),
     (K2:'H*'F(X0+'H/3,Y0+'K1/3)),
@@ -76,19 +77,20 @@ User-defined functions in MATHLAB 68 were defined as macros, working as a substi
     (K4:'H*'F(X0+'H,Y0+'K1-'K2+'K3)),
     (Y0+E:I/8*('K1+3*'K2+3*'K3+'K4))
     ))$
-
+  
     RUNGE2():"('PROG3 (
     (X0:'X0+'H),
     (Y0:'Y0+'K),
     'RUNGE1('X0,'Y0)
     ))$
-
+  
     PROG3(X,Y,Z):Z$
     RUNGE():"(ANS('Y0,'RUNGE1(0,0),'RUNGE2(),'RUNGE2(),
     'RUNGE2(),'RUNGE2(),'RUNGE2(),'RUNGE2(),
     'RUNGE2(),'RUNGE2()$
     ))$
-\end{verbatim}
+  \end{lstlisting}
+\end{minipage}
 
 Unquoting is disabled when inside double-quotation marks (\verb|"|), which allows the user to define functions that are not evaluated until they are called. MATHLAB 68 turns one of its quirks into a powerful feature, as it allows the user to define functions that are dependent on other functions, and then call them in a specific order.
 
@@ -163,7 +165,7 @@ There is a fourth aspect that Martin mentions as well, and that Macsyma is parti
 
 Below is an example of a Macsyma session, taken from Martin's paper \parencite{martin1971macsyma}:
 
-\begin{verbatim}
+\begin{lstlisting}[caption={Example of a Macsyma session.},label={lst:example-macsyma-session},numbers=none]
     (C1) D(MU,T):-3*MU*SIGMA$
     
     (C2) D(SIGMA,T):EPSILON-2*SIGMA**2$
@@ -179,11 +181,11 @@ Below is an example of a Macsyma session, taken from Martin's paper \parencite{m
     (C7) G[I]:=EXPAND(F[I-1]+DIFF(G[I-1],T))$
 
     (C8) F[5]@
-               2     3        2
+              2     3        2
     (D8) 105 MU SIGMA  - 15 MU  SIGMA
 
-                             - 45 EPSILON MU SIGMA
-\end{verbatim}
+                            - 45 EPSILON MU SIGMA
+\end{lstlisting}
 
 Martin's paper displays some examples of how Macsyma handles errors and allows the user to correct them, like using Macsyma's command \verb|SUBSTITUTE| to correct a typo in a command. In fact, the above session takes advantage of \verb|ALIAS| to abbreviate the name of the \verb|DERIVATIVE| command into just \verb|D|. This helps illustrate how Macsyma was truly designed with the user in mind, and how it fulfilled its objective of being a system that could interact with the user in a discussion-like manner.
 
@@ -307,7 +309,7 @@ As of 2021, Photomath amassed over 220 million downloads \parencite{photomath-do
 \begin{figure}[htb]
     \ffigbox[\FBwidth]
       {%
-        \caption{Photomath interface showing the steps to solve a mathematical equation.}
+        \caption{Photomath's interface showing the steps to solve a mathematical equation.}
         \label{fig:photomath-steps}
       }%
       {\includegraphics[scale=0.5]{photomath-steps}}
