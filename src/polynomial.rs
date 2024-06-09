@@ -645,13 +645,13 @@ impl Polynomial {
                             terms: vec![Term {
                                 coefficient: Rational64::new(1, 1),
                                 variables: vec![Variable {
-                                    name: "ⅈ".to_string(),
+                                    name: "\u{2148}".to_string(),
                                     degree: Rational64::new(2, 1),
                                 }],
                             }],
                             degree: 1.into(),
                         });
-                    println!("(ⅈ is the imaginary unit)");
+                    println!("(\u{2148} is the imaginary unit)");
                     // println!("{}", discriminant.as_string());
                     // panic!("Imaginary roots not supported yet!");
                 }
