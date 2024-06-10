@@ -46,8 +46,6 @@ Below is the grammar for Symbotini:
     \end{lstlisting}
 \end{minipage}
 
-Let us explain the grammar in more detail.
-
 The first rule that will be matched is the \verb|file| rule. It is the entry point of the grammar and matches the entire input file. It consists of a sequence of expressions, each followed by an optional newline character. The \verb|SOI| and \verb|EOI| rules are special rules that match the start and end of the input, respectively.
 
 The \verb|expr| rule is a silent rule that matches any of the following rules: \verb|assign|, \verb|operation|, \verb|polynomial| or \verb|solve|. This rule is used to group the different types of expressions that can be found in the input file, and all the operations the program can perform.
@@ -124,8 +122,8 @@ There are several methods implemented for the \verb|Term| struct:
     \item \verb|sort_vars()| is used to sort the variables in the term by lexico-graphical order of their name, i.e. the term $4yx$ would be rewritten as $4xy$. It is used to simplify the process of comparing terms.
     \item \verb|max_degree()| is used to find the maximum degree of the variables in the term. It iterates over the variables in the term and returns the variable with the highest degree. If the term has no variables, it returns $0$.
     \item \verb|factor()| is used to factor the term by combining like variables (variables with the same name). It iterates over the variables in the term and combines their coefficients if their names are equal. This method is used in the polynomial simplification process.
-    \item \verb|invert()| is used to invert the term by multiplying every variable's degree by $-1$ and multiplying the coefficient by $-1$.
-    \item \verb|pow()| is used to raise the term to a power. This method is selective and only raises the term to a power if the result isn't "uglier" than the original term. For instance, raising $x^2$ to the power of $2$ would result in $x^4$, and raising $25$ to the power of $0.5$ would result in $5$ (both inside a \verb|Polynomial|), but raising $13$ to the power of $0.5$ will just return $13^{\frac{1}{2}}$ in a \verb|Polynomial| struct, rather than a ratio approximating the value of $\sqrt{13}$.
+    \item \verb|invert()| is used to invert the term by multiplying the coefficient and every variable's degree by $-1$.
+    \item \verb|pow()| is used to raise the term to a power. This method is selective and only raises the term to a power if the result isn't "uglier" than the original term. For instance, raising $x^2$ to the power of $2$ would result in $x^4$, and raising $25$ to the power of $0.5$ would result in $5$ (inside of a \verb|Polynomial|), but raising $13$ to the power of $0.5$ will just return $13^{\frac{1}{2}}$ in a \verb|Polynomial| struct, rather than a ratio approximating the value of $\sqrt{13}$.
 \end{itemize}
 
 % \multilinecomment{
@@ -312,22 +310,9 @@ If the file is read successfully, the program will parse the input using the Pes
 
 After the two previous steps have been successfuly executed, we can initialize storage for the vector \verb|var_values|, where we will store the variable-value tuples with all the custom definition the user inputs.
 
-\begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={Reading and parsing user input, and defining storage for custom variable values}, label={lst:reading-parsing-input}]
-        let unparsed_file = fs::read_to_string("input.txt").unwrap();
-    
-        let file = PolyParser::parse(Rule::file, &unparsed_file)
-        .expect("unsuccessful parse")
-        .next()
-        .unwrap();
-    
-        let mut var_values: Vec<(String, Rational64)> = Vec::new();
-    \end{lstlisting}
-\end{minipage}
+The program proceeds with the parsing of each of the lines in the input file. When a line is read, it will be skipped if it is empty. If not, the input line will be printed to let the user know what operation is being performed.
 
-Now we can start parsing each of the lines in the input file. When a line is read, it will be skipped if it is empty. If not, the input line will be printed to let the user know what operation is being performed.
-
-After that, each of the lines is matched to one of the rules defined in the grammar as possible \verb|expr|(ession) types. This includes a \verb|polynomial|, an \verb|assignment|, an \verb|operation|, or an equation to \verb|solve|.
+Each of the lines is matched to one of the rules defined in the grammar as possible \verb|expr|(ession) types. This includes a \verb|polynomial|, an \verb|assignment|, an \verb|operation|, or an equation to \verb|solve|.
 
 Here is an overview of the behavior when matching each of the rules:
 \begin{itemize}
@@ -363,58 +348,4 @@ Here is an overview of the behavior when matching each of the rules:
 
 An additional rule exists for handling end of input (EOI). Any other unreachable cases that should not occur if the grammar is properly followed in the input file will cause the program to panic and terminate with an error message.
 
-\begin{lstlisting}[caption={Iterating through the lines of the input file}, label={lst:iterating-input}]
-    for line in file.into_inner() {
-    if line.as_str().trim().is_empty() {
-        continue; // Skip empty lines
-    }
-    println!("{}", line.as_str());
-    match line.as_rule() {
-        Rule::assign => {
-            let (var_name, var_value) = parse_assignment(line.into_inner());
-            var_values.push((var_name.clone(), var_value));
-
-            println!("\t{} = {}", var_name, var_value);
-        }
-        Rule::polynomial => {
-            let mut p = parse_polynomial(line.into_inner());
-            p.evaluate(&var_values);
-            println!("\t{}", p.as_string());
-        }
-        Rule::operation => {
-            let mut result = parse_operation(line.into_inner());
-            result.evaluate(&var_values);
-            println!("\t{}", result.as_string());
-        }
-        Rule::solve => {
-            let mut iter = line.into_inner();
-            let mut p = parse_polynomial(iter.next().unwrap().into_inner());
-            p.evaluate(&var_values);
-            let mut variable = p.first_var().unwrap_or("".to_string());
-            if variable.is_empty() {
-                panic!("No variable to solve for");
-            }
-            if let Some(var) = iter.next() {
-                variable = var.as_str().to_string();
-            }
-            let result = p.roots(&variable);
-            for root in result {
-                if root.len() == 1 {
-                    println!("\t{}\t= {}", variable, root[0].as_string());
-                } else if root.len() > 1 {
-                    print!("\t{}\\t= {}", variable, root[0].as_string());
-                    for ratio in &root[1..] {
-                        if ratio.numerator.terms[0].coefficient >= 0.into() {
-                            print!(" + ");
-                        }
-                        print!("{}", ratio.as_string());
-                    }
-                    println!();
-                }
-            }
-        }
-        Rule::EOI => (),
-        _ => unreachable!(),
-    }
-}
-\end{lstlisting}
+Refer to the appendix for the full implementation of the main program, divided into the parts mentioned in this section.
