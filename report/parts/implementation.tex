@@ -82,6 +82,60 @@ Symbotini uses several custom-defined data structures to represent the different
 
 The implementation of the methods mentioned in this section can be found in Appendix \ref{chap:appendix-a}.
 
+\section{Class Diagram}
+
+\begin{center}
+\begin{tikzpicture}
+\umlclass[y=2]{Variable}{
+    name: String \\
+    degree: Rational64
+}{}
+
+\umlclass[x=7, y=2]{Term}{
+    coefficient: Rational64 \\
+    variables: Vec<Variable>
+}{
+    max\_degree() : Rational64 \\
+    sort\_vars() : void \\
+    factor() : void \\
+    invert() : void \\
+    pow(q: Rational64) : Polynomial
+}
+
+\umlclass[x=0, y=-8, width=20em]{Polynomial}{
+    terms: Vec<Term> \\
+    degree: Rational64
+}{
+    degree() : Rational64 \\
+    leading\_term() : Term \\
+    evaluate(values: Vec<(String, Rational64)>) : void \\
+    sort\_terms() : void \\
+    as\_string() : String \\
+    add\_like\_terms() : void \\
+    simplify() : void \\
+    make\_integer() : i64 \\
+    factor() : (Term, Polynomial) \\
+    first\_var() : Option<String> \\
+    find\_sym\_coeff(var: \&str, degree: Rational64) : (Term, Term) \\
+    roots(var: \&str) : Vec<Vec<PolyRatio{>}>
+}
+
+\umlclass[x=8, y=-8]{PolyRatio}{
+    numerator: Polynomial \\
+    denominator: Polynomial
+}{
+    simplify() : void \\
+    as\_string() : String \\
+    evaluate(values: Vec<(String, Rational64)>) : void
+}
+
+\umlassoc[mult1=1, mult2=*]{Polynomial}{Term}
+\umlassoc[mult1=1, mult2=*]{Term}{Variable}
+\umlassoc[mult1=1, mult2=1]{PolyRatio}{Polynomial}
+\umlinherit[geometry=-|]{PolyRatio}{Term}
+\end{tikzpicture}
+\end{center}
+
 \subsection{Rational64}\label{subsec:ratio64}
 
 The type \verb|Rational64| is an alias for the \verb|Ratio<i64>| type from the \verb|num| crate. This type represents a rational number as a ratio of two integers (numerator and denominator). The \verb|num| crate provides a generic implementation of arithmetic operations for rational numbers.
