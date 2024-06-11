@@ -114,7 +114,6 @@ Using this grammar, Pest generates a parser that can analyze the input file and 
 
 The implementation of the data structures and the methods discussed in this section can be found in \textit{Appendix \ref{chap:appendix-a}}. Below is a diagram showing the relationships between the different data structures:
 
-% TODO: Make sure the class diagram is correct
 \begin{center}
 \begin{tikzpicture}
 \umlclass[y=2]{Variable}{
@@ -166,6 +165,15 @@ The implementation of the data structures and the methods discussed in this sect
 \umlinherit[geometry=-|]{PolyRatio}{Term}
 \end{tikzpicture}
 \end{center}
+
+Here is an explanation of the relationships between the data structures as shown in the diagram:
+
+\begin{itemize}
+    \item A \verb|Polynomial| has a one-to-many relationship with \verb|Term|s, as it is composed of a vector of terms. Each term in the polynomial is a \verb|Term| struct in the attribute \verb|terms|.
+    \item A \verb|Term| has a one-to-many relationship with \verb|Variable|s, as each term consists of multiple instances of the \verb|Variable| struct in the attribute \verb|variables|.
+    \item A \verb|PolyRatio| has a one-to-one relationship with \verb|Polynomial|s, as it is composed of two polynomials: a numerator and a denominator.
+    \item \verb|PolyRatio| inherits from \verb|Term|. This is not a direct relationship; the \verb|PolyRatio| struct operates on \verb|Polynomial| structs, which contain \verb|Term| structs. This means that \verb|PolyRatio| interacts with terms through the \verb|Polynomial| structs that compose it.
+\end{itemize}
 
 \subsection{Rational64}\label{subsec:ratio64}
 

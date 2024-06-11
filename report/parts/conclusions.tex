@@ -28,11 +28,75 @@ Finally, the program could be improved by adding a graphical user interface (GUI
 
 \section{Results}\label{sec:results}
 
+\subsection{Performance}\label{subsec:performance}
+
+Using \verb|libtest|'s benchmarking capabilities, the performance of the program was measured for different operations. The results are shown in the tables below, with the time taken per iteration and the variance in nanoseconds.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{lrr}
+        \toprule
+        \textbf{Test} & \textbf{Time (ns/iter)} & \textbf{Variance (ns)} \\
+        \midrule
+        Polynomial addition             & 2,037   & $\pm$ 862    \\
+        Polynomial division             & 15,230  & $\pm$ 14,315 \\
+        Polynomial multiplication       & 10,071  & $\pm$ 8,368  \\
+        Linear polynomial roots         & 36,873  & $\pm$ 15,561 \\
+        Quadratic polynomial roots      & 158,941 & $\pm$ 39,824 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Benchmark results for polynomial operations}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{lrr}
+        \toprule
+        \textbf{Test} & \textbf{Time (ns/iter)} & \textbf{Variance (ns)} \\
+        \midrule
+        PolyRatio addition          & 86,200  & $\pm$ 37,459 \\
+        PolyRatio division          & 32,381  & $\pm$ 6,081  \\
+        PolyRatio simplification    & 13,384  & $\pm$ 4,253  \\
+        \bottomrule
+    \end{tabular}
+    \caption{Benchmark results for polynomial ratio operations}
+\end{table}
+
+Based on the benchmark results, the following conclusions can be drawn:
+
+\begin{itemize}
+    \item \textbf{Basic polynomial operations:} 
+    \begin{itemize}
+        \item Polynomial addition is the fastest operation.
+        \item Polynomial multiplication and division are slower, with division taking the longest time and showing high variability.
+    \end{itemize}
+
+    \item \textbf{Root finding:}
+    \begin{itemize}
+        \item Quadratic root finding is significantly more time-consuming than finding roots of linear polynomials.
+    \end{itemize}
+
+    \item \textbf{Polynomial ratio operations:}
+    \begin{itemize}
+        \item Addition of polynomial ratios is the most time-consuming operation overall, and has high variance.
+        \item Division and simplification of polynomial ratios are faster, with simplification being the quickest among these operations.
+    \end{itemize}
+    
+    \item \textbf{General observations:}
+    \begin{itemize}
+        \item High variance in some operations (e.g., polynomial division and polynomial ratio addition) suggests that performance can vary widely depending on input sizes or specific cases.
+        \item More complex operations, such as root finding and working with polynomial ratios, generally take longer and show greater variability.
+        \item Basic polynomial operations are relatively fast and consistent, but there is room for optimization in polynomial ratio operations.
+    \end{itemize}
+\end{itemize}
+
 \subsection{Examples of use}\label{subsec:examples-of-use}
 
 Below are some examples of the program in action. When executing the program, the user inputs are shown first, and the output is shown tabulated below.
 
 Because of the use of Unicode characters in the output, the representation of the imaginary unit has been replaced by a regular \verb|i|. The program itself outputs the results correctly and uses the \textit{double-struck italic small i} character (U+2148) to represent the imaginary unit.
+
+\newpage
 
 \begin{minipage}{\linewidth}
     \begin{lstlisting}[caption={Example of use of the program simplifying expressions.},label={lst:example-simplify}]
@@ -118,7 +182,3 @@ Because of the use of Unicode characters in the output, the representation of th
             x	= (-y^(2)-2) / (-10)
     \end{lstlisting}
 \end{minipage}
-
-\subsection{Performance}\label{subsec:performance}
-
-
