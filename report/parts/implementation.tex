@@ -4,23 +4,24 @@
 
 \section{Design of the grammar}\label{sec:design-of-the-grammar}
 
-Symbotini uses a custom-defined grammar to parse the input file in which the user specifies the desired calculations, expressions and assignments.
+\textsc{Symbotini} uses a custom-defined grammar to parse the input file in which the user specifies the desired calculations, expressions and assignments.
 
 This grammar is a parsing expression grammar (PEG). It is defined and designed for the Pest parser generator \parencite{pest-book}, which is a Rust library for defining parsers. The grammar is defined in its own \verb|*.pest| file, which is then used by Pest to generate the parser code.
 
-Symbotini's grammar supports implicit whitespace. This means that the parser automatically skips over whitespace characters in the input file, unless they are explicitly required by the grammar. For instance, inputting \verb|1+2| is equivalent to \verb|1 + 2|, or even \verb|1 +2| or \verb|1+ 2|.
+\textsc{Symbotini}'s grammar supports implicit whitespace. This means that the parser automatically skips over whitespace characters in the input file, unless they are explicitly required by the grammar. For instance, inputting \verb|1+2| is equivalent to \verb|1 + 2|, or even \verb|1 +2| or \verb|1+ 2|.
 
 The syntax for Pest parsers allows for two special kinds of rules: silent rules and atomic rules:
 
 \begin{itemize}
-    \item Silent rules, denoted by the underscore (\verb|_|) character, are rules that do not produce pairs or tokens. In this grammar, they are used for grouping other rules together or for the special case of the \verb|WHITESPACE| rule.
-    \item Atomic rules, denoted by the at (\verb|@|) character, are rules preventing implicit whitespace. Additionally, any other rules called within an atomic rule are treated as silent rules.
+    \item Silent rules, denoted in Pest by the underscore (\verb|_|) character, are rules that do not produce pairs or tokens. In this grammar, they are used for grouping other rules together or for the special case of the \verb|WHITESPACE| rule.
+    \item Atomic rules, denoted in Pest by the at (\verb|@|) character, are rules preventing implicit whitespace. Additionally, any other rules called within an atomic rule are treated as silent rules.
 \end{itemize}
 
-Below is the grammar for Symbotini:
+The following is the definition of the grammar for \textsc{Symbotini} in Backus--Naur form:
 
+\multilinecomment{
 \begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={The grammar for Symbotini}, label={lst:grammar}]
+    \begin{lstlisting}[caption={The grammar for \textsc{Symbotini}}, label={lst:grammar}]
         expr = _{ assign | operation | polynomial | solve }
         
         operation = { "(" ~ polynomial ~ ")" ~ op ~ "(" ~ polynomial ~ ")" ~ (op ~ "(" ~ polynomial ~ ")")* }
@@ -44,6 +45,37 @@ Below is the grammar for Symbotini:
     
         solve = { "[" ~ polynomial ~ ("," ~ var_name)? ~ "]" }
     \end{lstlisting}
+\end{minipage}
+}
+
+\begin{minipage}{\linewidth}
+    \begin{grammar}
+        <expr> ::= <assign> \alt <operation> \alt <polynomial> \alt <solve> \hfill{(silent)}
+
+        <operation> ::= `(' <polynomial> `)' <op> `(' <polynomial> `)' (`(' <op> `(' <polynomial> `)' `)')*
+
+        <assign> ::= <var> `=' (`(' <operation> `)' \alt <polynomial>)
+        
+        <sign> ::= `+' \alt `-'
+        
+        <number> ::= <ASCII_DIGIT>+ (`.' <ASCII_DIGIT>+)?
+        
+        <fraction> ::= <number> `/' <number>
+        
+        <var> ::= <var_name> (`^' `(' <sign>? <number> (`/' <number>)? `)')? \hfill{(atomic)}
+        
+        <var\_name> ::= <ASCII_ALPHA>
+        
+        <term> ::= <sign>? (<number> \alt `(' <fraction> `)' \alt <var>)+
+        
+        <polynomial> ::= <term> (WHITESPACE* <term>)*
+        
+        <file> ::= SOI (<expr> NEWLINE?)* EOI
+        
+        <WHITESPACE> ::= ` '
+        
+        <solve> ::= `[' <polynomial> (`,' <var_name>)? `]'
+    \end{grammar}
 \end{minipage}
 
 The first rule that will be matched is the \verb|file| rule. It is the entry point of the grammar and matches the entire input file. It consists of a sequence of expressions, each followed by an optional newline character. The \verb|SOI| and \verb|EOI| rules are special rules that match the start and end of the input, respectively.
@@ -72,18 +104,17 @@ The \verb|fraction| rule matches a \verb|number| followed by a slash (\verb|/|) 
 
 The \verb|WHITESPACE| rule is a silent rule that matches a single space character. It is used to allow for implicit whitespace in the input file.
 
-This grammar underwent several iterations and changes during the development of Symbotini. The final version of the grammar was chosen to be simple and easy to understand, while still being able to parse the desired input expressions. Many of the design decisions were made to make the input file as readable and natural as possible.
+This grammar underwent several iterations and changes during the development of \textsc{Symbotini}. The final version of the grammar was chosen to be simple and easy to understand, while still being able to parse the desired input expressions. Many of the design decisions were made to make the input file as readable and natural as possible.
 
-Using this grammar, Pest generates a parser that can analyze the input file and match each line with a rule. This allows Symbotini to understand the user's input, construct suitable structures and perform the desired calculations.
+Using this grammar, Pest generates a parser that can analyze the input file and match each line with a rule. This allows \textsc{Symbotini} to understand the user's input, construct suitable structures and perform the desired calculations.
 
 \section{Data structures}\label{sec:data-structures}
 
-Symbotini uses several custom-defined data structures to represent the different elements of the input expressions and the results of the calculations. These data structures are defined as part of a Rust module which is imported by the main program.
+\textsc{Symbotini} uses several custom-defined data structures to represent the different elements of the input expressions and the results of the calculations. These data structures are defined as part of a Rust module which is imported by the main program.
 
-The implementation of the methods mentioned in this section can be found in Appendix \ref{chap:appendix-a}.
+The implementation of the data structures and the methods discussed in this section can be found in \textit{Appendix \ref{chap:appendix-a}}. Below is a diagram showing the relationships between the different data structures:
 
-\section{Class Diagram}
-
+% TODO: Make sure the class diagram is correct
 \begin{center}
 \begin{tikzpicture}
 \umlclass[y=2]{Variable}{
@@ -140,33 +171,15 @@ The implementation of the methods mentioned in this section can be found in Appe
 
 The type \verb|Rational64| is an alias for the \verb|Ratio<i64>| type from the \verb|num| crate. This type represents a rational number as a ratio of two integers (numerator and denominator). The \verb|num| crate provides a generic implementation of arithmetic operations for rational numbers.
 
-Although this type is from the crate \verb|num| and was not created for this project, its use in Symbotini is essential for the correct representation of fractions in the input expressions.
+Although this type is from the crate \verb|num| and was not created for this project, its use in \textsc{Symbotini} is essential for the correct representation of fractions in the input expressions.
 
 \subsection{Variable}\label{subsec:variable}
-
-\begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={The \texttt{Variable} struct}, label={lst:variable}]
-        pub struct Variable {
-            pub name: String,
-            pub degree: Rational64,
-        }
-    \end{lstlisting}
-\end{minipage}
 
 The \verb|Variable| struct represents a variable in a polynomial expression. It consists of a name (a \verb|String|) and a degree (a \verb|Rational64|). The name is a string containing the variable's name, which is a single alphabetical ASCII character. The degree is a rational number representing the variable's exponent.
 
 A custom definition of equality for the \verb|Variable| struct was implemented. Two variables are considered equal if their names are equal and their degrees are equal. This is used to compare variables in the polynomial simplification process.
 
 \subsection{Term}\label{subsec:term}
-
-\begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={The \texttt{Term} struct}, label={lst:term}]
-        pub struct Term {
-            pub coefficient: Rational64,
-            pub variables: Vec<Variable>,
-        }    
-    \end{lstlisting}
-\end{minipage}
 
 The \verb|Term| struct represents a term in a polynomial expression. It consists of a rational coefficient (a \verb|Rational64|) and a vector of variables (\verb|Vec<Variable>|), defined in the custom \texttt{Variable} struct.
 
@@ -180,33 +193,11 @@ There are several methods implemented for the \verb|Term| struct:
     \item \verb|pow()| is used to raise the term to a power. This method is selective and only raises the term to a power if the result isn't "uglier" than the original term. For instance, raising $x^2$ to the power of $2$ would result in $x^4$, and raising $25$ to the power of $0.5$ would result in $5$ (inside of a \verb|Polynomial|), but raising $13$ to the power of $0.5$ will just return $13^{\frac{1}{2}}$ in a \verb|Polynomial| struct, rather than a ratio approximating the value of $\sqrt{13}$.
 \end{itemize}
 
-% \multilinecomment{
-
-% }
-
 In addition to these methods, the \verb|Term| struct has a custom implementation of equality. Two terms are considered equal if their coefficients are equal and their variable vectors, after being sorted, are equal. This is used to compare terms in the polynomial simplification process.
-
-% \multilinecomment{
-
-% }
 
 Multiplication and division of terms are also custom implementations in the \verb|Term| struct. For multiplication, the method multiplies the coefficients and concatenates the variable vectors. For division, the method upgrades both \verb|Term|s into \verb|Polynomial|s and divides them. The result is a \verb|Polynomial| with a single \verb|Term|: the quotient.
 
-% \multilinecomment{
-
-% }
-
 \subsection{Polynomial}\label{subsec:polynomial}
-
-\begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={The \texttt{Polynomial} struct}, label={lst:polynomial}]
-        pub struct Polynomial {
-            pub terms: Vec<Term>,
-            pub degree: Rational64,
-        }
-    \end{lstlisting}
-\end{minipage}
-
 
 The \verb|Polynomial| struct represents a polynomial expression. It consists of a vector of terms (\verb|Vec<Term>|) and a degree (\verb|Rational64|). The degree is a rational number representing an exponent to which the polynomial is raised, allowing for the representation of expressions like $\sqrt{2x + y}$.
 
@@ -231,15 +222,7 @@ The \verb|Polynomial| struct has several methods implemented:
     \end{itemize}
 \end{itemize}
 
-% \multilinecomment{
-
-% }
-
 The \verb|Polynomial| struct also has a custom implementation of equality. Two polynomials are considered equal if, once simplified, their vector of terms are equal.
-
-% \multilinecomment{
-
-% }
 
 Operations for \verb|Polynomial|s are also defined as custom functions:
 
@@ -273,20 +256,7 @@ Operations for \verb|Polynomial|s are also defined as custom functions:
     \end{enumerate}
 \end{itemize}
 
-% \multilinecomment{
-
-% }
-
 \subsection{PolyRatio}\label{subsec:polyratio}
-
-\begin{minipage}{\linewidth}
-    \begin{lstlisting}[caption={The \texttt{PolyRatio} struct}, label={lst:polyratio}]
-        pub struct PolyRatio {
-            pub numerator: Polynomial,
-            pub denominator: Polynomial,
-        }
-    \end{lstlisting}
-\end{minipage}
 
 \verb|PolyRatio| represents a rational algebraic expression, with a numerator and a denominator, both of type \verb|Polynomial|. This function is the most complex and powerful in the module.
 
@@ -305,10 +275,6 @@ The \verb|PolyRatio| struct has several methods implemented:
     \item The \verb|evaluate()| method is used to evaluate the \verb|PolyRatio| given a vector of tuples containing variable names and their values. It \verb|evaluate()|s the numerator and denominator \verb|Polynomial|s separately.
 
 \end{itemize}
-
-% \multilinecomment{
-
-% }
 
 The four elementary arithmetic operations are defined for \verb|PolyRatio| in the following way:
 \begin{itemize}
@@ -337,7 +303,7 @@ A set of compatibility functions are also implemented for \verb|PolyRatio| to ma
 
 The main program is responsible for parsing, evaluating and performing operations on the symbolic expressions expressed by the custom syntax defined in the grammar. Using the Pest parser, the program reads the input file and performs the operations.
 
-The implementation of the functions mentioned in this section can be found in Appendix \ref{chap:appendix-a}.
+The implementation of the functions mentioned in this section can be found in \textit{Appendix \ref{chap:appendix-a}}.
 
 \subsection{Helper functions}\label{subsec:helper-functions}
 
@@ -349,10 +315,6 @@ The main program has several helper functions that are used to parse the input f
     \item The \verb|parse_assignment()| function parses an assignment from the result of matching the \verb|assignment| rule in the Pest parser (e.g.: \verb|x = 2|). It extracts the variable name and the value, and stores them in a tuple, later to be pushed to the vector holding the variable-value tuples.
     \item The \verb|parse_operation()| function parses an operation from the result of matching the \verb|operation| rule in the Pest parser (e.g.: \verb|(4x) * (y + 6) / (2)|) into a \verb|PolyRatio| struct. It parses the first polynomial in the operation sequence, and then iterates through the rest of the operation sequence, parsing the next polynomial, matching the operation with its corresponding rule and performing the calculation using the previous result.
 \end{itemize}
-
-% \multilinecomment{
-
-% }
 
 \subsection{Main function}\label{subsec:main-function}
 
@@ -369,6 +331,7 @@ The program proceeds with the parsing of each of the lines in the input file. Wh
 Each of the lines is matched to one of the rules defined in the grammar as possible \verb|expr|(ession) types. This includes a \verb|polynomial|, an \verb|assignment|, an \verb|operation|, or an equation to \verb|solve|.
 
 Here is an overview of the behavior when matching each of the rules:
+
 \begin{itemize}
     \item \textbf{Assignment}:
     \begin{itemize}

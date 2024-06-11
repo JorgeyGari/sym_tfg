@@ -1,5 +1,14 @@
 \chapter{Methods and Algorithms}\label{chap:appendix-a}
 
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[caption={The \texttt{Variable} struct}, label={lst:variable}]
+        pub struct Variable {
+            pub name: String,
+            pub degree: Rational64,
+        }
+    \end{lstlisting}
+\end{minipage}
+
 \begin{lstlisting}[caption={The implementation of \texttt{PartialEq} for the \texttt{Variable} struct}, label={lst:variable-eq}]
     impl PartialEq for Variable {
         fn eq(&self, other: &Self) -> bool {
@@ -7,6 +16,15 @@
         }
     }
 \end{lstlisting}
+
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[caption={The \texttt{Term} struct}, label={lst:term}]
+        pub struct Term {
+            pub coefficient: Rational64,
+            pub variables: Vec<Variable>,
+        }    
+    \end{lstlisting}
+\end{minipage}
 
 \begin{minipage}{\linewidth}
     \begin{lstlisting}[caption={The implementation of the \texttt{sort\_vars()} method for the \texttt{Term} struct}, label={lst:term-sort-vars}]
@@ -171,6 +189,15 @@
         }
     }
 \end{lstlisting}
+
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[caption={The \texttt{Polynomial} struct}, label={lst:polynomial}]
+        pub struct Polynomial {
+            pub terms: Vec<Term>,
+            pub degree: Rational64,
+        }
+    \end{lstlisting}
+\end{minipage}
 
 \begin{lstlisting}[caption={The implementation of the \texttt{degree()} method for the \texttt{Polynomial} struct}, label={lst:polynomial-degree}]
     /// Return the degree of the polynomial.
@@ -809,7 +836,16 @@
             ratio
         }
     }
-\end{lstlisting}        
+\end{lstlisting}
+
+\begin{minipage}{\linewidth}
+    \begin{lstlisting}[caption={The \texttt{PolyRatio} struct}, label={lst:polyratio}]
+        pub struct PolyRatio {
+            pub numerator: Polynomial,
+            pub denominator: Polynomial,
+        }
+    \end{lstlisting}
+\end{minipage}
 
 \begin{lstlisting}[caption={The implementation of the \texttt{simplify()} method for the \texttt{PolyRatio} struct}, label={lst:polyratio-simplify}]
     pub fn simplify(&mut self) {
