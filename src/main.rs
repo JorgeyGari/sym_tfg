@@ -1,13 +1,9 @@
-use core::panic;
-use num::rational::{Ratio, Rational64};
-use num::Rational;
+use num::rational::Rational64;
 use pest::iterators::Pairs;
 use pest::Parser;
 use pest_derive::Parser;
 use polynomial::PolyRatio;
 use std::fs;
-
-use crate::polynomial::Polynomial;
 
 mod polynomial;
 

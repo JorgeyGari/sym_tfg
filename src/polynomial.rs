@@ -74,7 +74,7 @@ impl Term {
                 degree: var.degree * q.clone(),
             });
         }
-        let mut ratio_coef =
+        let ratio_coef =
             Rational64::from_f64(self.coefficient.to_f64().unwrap().powf(q.to_f64().unwrap()))
                 .unwrap();
         if self.coefficient.denom() == &1 && ratio_coef.denom() != &1 {
