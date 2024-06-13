@@ -17,7 +17,7 @@ The syntax for Pest parsers allows for two special kinds of rules: silent rules 
     \item Atomic rules, denoted in Pest by the at (\verb|@|) character, are rules preventing implicit whitespace. Additionally, any other rules called within an atomic rule are treated as silent rules.
 \end{itemize}
 
-The following is the definition of the grammar for \textsc{Symbotini} in Backus--Naur form:
+The following is the definition of the grammar for \textsc{Symbotini} in Backus--Naur form. Notes have been added to the right to indicate when they are silent or atomic:
 
 \multilinecomment{
 \begin{minipage}{\linewidth}
@@ -115,64 +115,63 @@ Using this grammar, Pest generates a parser that can analyze the input file and 
 The implementation of the data structures and the methods discussed in this section can be found in \textit{Appendix \ref{chap:appendix-a}}. Below is a diagram showing the relationships between the different data structures:
 
 \begin{center}
-\begin{tikzpicture}
-\umlclass[y=2]{Variable}{
-    name: String \\
-    degree: Rational64
-}{}
-
-\umlclass[x=7, y=2]{Term}{
-    coefficient: Rational64 \\
-    variables: Vec<Variable>
-}{
-    max\_degree() : Rational64 \\
-    sort\_vars() : void \\
-    factor() : void \\
-    invert() : void \\
-    pow(q: Rational64) : Polynomial
-}
-
-\umlclass[x=0, y=-8, width=20em]{Polynomial}{
-    terms: Vec<Term> \\
-    degree: Rational64
-}{
-    degree() : Rational64 \\
-    leading\_term() : Term \\
-    evaluate(values: Vec<(String, Rational64)>) : void \\
-    sort\_terms() : void \\
-    as\_string() : String \\
-    add\_like\_terms() : void \\
-    simplify() : void \\
-    make\_integer() : i64 \\
-    factor() : (Term, Polynomial) \\
-    first\_var() : Option<String> \\
-    find\_sym\_coeff(var: \&str, degree: Rational64) : (Term, Term) \\
-    roots(var: \&str) : Vec<Vec<PolyRatio{>}>
-}
-
-\umlclass[x=8, y=-8]{PolyRatio}{
-    numerator: Polynomial \\
-    denominator: Polynomial
-}{
-    simplify() : void \\
-    as\_string() : String \\
-    evaluate(values: Vec<(String, Rational64)>) : void
-}
-
-\umlassoc[mult1=1, mult2=*]{Polynomial}{Term}
-\umlassoc[mult1=1, mult2=*]{Term}{Variable}
-\umlassoc[mult1=1, mult2=1]{PolyRatio}{Polynomial}
-\umlinherit[geometry=-|]{PolyRatio}{Term}
-\end{tikzpicture}
-\end{center}
-
+    \begin{tikzpicture}
+        \umlclass[x=0, y=2]{Variable}{
+            name: String \\
+            degree: Rational64
+        }{}
+        
+        \umlclass[x=0, y=-6]{Term}{
+            coefficient: Rational64 \\
+            variables: Vec<Variable>
+        }{
+            max\_degree() : Rational64 \\
+            sort\_vars() : void \\
+            factor() : void \\
+            invert() : void \\
+            pow(q: Rational64) : Polynomial
+        }
+        
+        \umlclass[x=8, y=-6, width=20em]{Polynomial}{
+            terms: Vec<Term> \\
+            degree: Rational64
+        }{
+            degree() : Rational64 \\
+            leading\_term() : Term \\
+            evaluate(values: Vec<(String, Rational64)>) : void \\
+            sort\_terms() : void \\
+            as\_string() : String \\
+            add\_like\_terms() : void \\
+            simplify() : void \\
+            make\_integer() : i64 \\
+            factor() : (Term, Polynomial) \\
+            first\_var() : Option<String> \\
+            find\_sym\_coeff(var: \&str, degree: Rational64) : (Term, Term) \\
+            roots(var: \&str) : Vec<Vec<PolyRatio{>}>
+        }
+        
+        \umlclass[x=8, y=2]{PolyRatio}{
+            numerator: Polynomial \\
+            denominator: Polynomial
+        }{
+            simplify() : void \\
+            as\_string() : String \\
+            evaluate(values: Vec<(String, Rational64)>) : void
+        }
+        
+        \umlcompo[mult1=1, mult2=*]{Term}{Variable}
+        \umlaggreg[geometry=-|, anchor1=220, anchor2=south, mult1=1, mult2=*]{Polynomial}{Term}
+        \umlinherit{Polynomial}{PolyRatio}
+    \end{tikzpicture}
+\end{center}   
+    
+    
 Here is an explanation of the relationships between the data structures as shown in the diagram:
 
 \begin{itemize}
-    \item A \verb|Polynomial| has a one-to-many relationship with \verb|Term|s, as it is composed of a vector of terms. Each term in the polynomial is a \verb|Term| struct in the attribute \verb|terms|.
-    \item A \verb|Term| has a one-to-many relationship with \verb|Variable|s, as each term consists of multiple instances of the \verb|Variable| struct in the attribute \verb|variables|.
-    \item A \verb|PolyRatio| has a one-to-one relationship with \verb|Polynomial|s, as it is composed of two polynomials: a numerator and a denominator.
-    \item \verb|PolyRatio| inherits from \verb|Term|. This is not a direct relationship; the \verb|PolyRatio| struct operates on \verb|Polynomial| structs, which contain \verb|Term| structs. This means that \verb|PolyRatio| interacts with terms through the \verb|Polynomial| structs that compose it.
+    \item A \verb|Term| has a one-to-many composition relationship with \verb|Variable|s, as each term consists of multiple instances of the \verb|Variable| struct in the attribute \verb|variables|. A variable only really exists in the context of a term.
+    \item A \verb|Polynomial| has a one-to-many composition relationship with \verb|Term|s, as it is made up of a vector of terms. Each term in the polynomial is a \verb|Term| struct in the attribute \verb|terms|. It is a composition rather than an aggregation because, contrary to \verb|Variable|s, \verb|Term|s can exist independently of a polynomial and some operations are performed on them separately.
+    \item \verb|PolyRatio| inherits from \verb|Polynomial|, as it is an extension made up of two of them: a numerator and a denominator. Most of the operations on \verb|Polynomial|s can be performed on \verb|PolyRatio|s, but with the added complexity of handling the fraction.
 \end{itemize}
 
 \subsection{Rational64}\label{subsec:ratio64}
