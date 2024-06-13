@@ -1335,7 +1335,7 @@
 
 \section{Introduction}
 
-This appendix provides a user manual for \textsc{Symbotini}, a symbolic calculator.
+This appendix provides a user manual for \textsc{Symbotini}, a simple, user-friendly symbolic calculator written in Rust. \textsc{Symbotini} can evaluate expressions, assign values to variables, and solve linear and quadratic equations. 
 
 \section{Installation}
 
@@ -1373,10 +1373,10 @@ Operations can be chained together, and they will always be evaluated from left 
 \theoremstyle{definition}
 \newtheorem{exmp}{Example}[section]
 
-\begin{exmp}{Computing $(1 + 2) \times 3$}
+\begin{exmp}{Computing $(1  \times 2) + 3$}
     \begin{verbatim}
-    (1) + (2) * (3)
-        9
+    (1) * (2) + (3)
+        5
     \end{verbatim}
 \end{exmp}
 
@@ -1455,7 +1455,7 @@ If no variable is provided, the first variable appearing in the polynomial will 
 
 \begin{exmp}{Solving the equation $x^2 - 1 = 0$}
     \begin{verbatim}
-    [x^(2) + 1]
+    [x^(2) - 1]
         x   = 1
         x   = -1
     \end{verbatim}
@@ -1483,7 +1483,7 @@ If a variable is provided, the roots are calculated with respect to that variabl
     \end{verbatim}
 \end{exmp}
 
-\subsection{Run \textsc{Symbotini}}
+\subsection{Running \textsc{Symbotini}}
 
 To use \textsc{Symbotini}, you need to run the following command in the root directory of the repository:
 
@@ -1492,4 +1492,4 @@ cargo run
 \end{verbatim}
 
 This command will read the file \texttt{input.txt} located in the root directory.
-The results of the operations will be printed to the console below the input expressions and tabulated.
+The results of the operations will be printed to the console below the input expressions and tabulated, as seen in the examples provided in this manual.
